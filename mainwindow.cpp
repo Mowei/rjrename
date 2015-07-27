@@ -74,7 +74,13 @@ void MainWindow::on_butRename_clicked()
                 QRegExp rx("<span itemprop=\"title\">.*<span itemprop=\"title\">.*<span itemprop=\"title\">(.*)</span></a>.*<span itemprop=\"brand\">(.*)<\/span><\/a>.*(\\d{2})年(\\d{2})月(\\d{2})日.*<tr><th>作品形式(.*)<tr><th>ファイル形式");
                 rx.setMinimal(true);
                 rx.indexIn(src, 0);
-                qDebug()<< rx.cap(1)<<"!"<< rx.cap(2)<< rx.cap(3)<< rx.cap(4)<< rx.cap(5);
+                qDebug()<< rx.cap(1)<< rx.cap(2)<< rx.cap(3)<< rx.cap(4)<< rx.cap(5);
+
+                if(rx.cap(1).isEmpty()||rx.cap(2).isEmpty()||rx.cap(5).isEmpty()){
+                    msg+="Page Not Found!\n";
+                    ui->plainTextEdit->setPlainText(msg);
+                    continue;
+                }
 
                 QRegExp type("title=\"(.*)\">");
                 type.setMinimal(true);
