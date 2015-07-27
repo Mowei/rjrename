@@ -98,6 +98,17 @@ void MainWindow::on_butRename_clicked()
 
                 msg += "rename to ";
                 QString newname="["+rx.cap(2) + "]["+rx.cap(3)+ rx.cap(4)+ rx.cap(5)+"]["+rjname+"]"+rx.cap(1)+rjtype+"."+rjfile.suffix() ;
+                newname.replace("?","？");
+                newname.replace("~","～");
+                newname.replace("*","＊");
+                newname.replace("/","／");
+                newname.replace("\"","＼");
+                newname.replace(":","：");
+                newname.replace("\"","＂");
+                newname.replace("<","＜");
+                newname.replace(">","＞");
+                newname.replace("|","｜");
+
                 msg +=newname+"\n";
                 ui->plainTextEdit->setPlainText(msg);
 
