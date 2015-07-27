@@ -51,7 +51,7 @@ void MainWindow::on_butRename_clicked()
             QRegExp rx("(RJ\\d{6})");
             rx.setMinimal(true);
             rx.indexIn(currentFileList.at(i), 0);
-            QString rjname= rx.cap(1);
+            QString rjname= rx.cap(1).toUpper();
 
             if(rjname==""){
                 continue;
