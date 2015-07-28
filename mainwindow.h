@@ -29,7 +29,6 @@ private:
 public:
     QString currentDirectory;
     QStringList currentFileList;
-    QString msg;
 
 };
 

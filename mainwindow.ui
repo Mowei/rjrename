@@ -23,14 +23,7 @@
      </widget>
     </item>
     <item>
-     <widget class="QPlainTextEdit" name="plainTextEdit">
-      <property name="sizeAdjustPolicy">
-       <enum>QAbstractScrollArea::AdjustToContents</enum>
-      </property>
-      <property name="centerOnScroll">
-       <bool>false</bool>
-      </property>
-     </widget>
+     <widget class="QTextEdit" name="textEdit"/>
     </item>
     <item>
      <layout class="QVBoxLayout" name="verticalLayout_2">

@@ -21,7 +21,6 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_butOD_clicked()
 {
-    msg ="";
     SendMsg("Open Directory...");
 
     ui->listWidget->clear();
@@ -95,7 +94,7 @@ void MainWindow::on_butRename_clicked()
 
                 SendMsg("File : ");
                 SendMsg(oldname);
-                SendMsg("rename to ");
+                SendMsg("ReName :");
                 QString newname="["+rx.cap(2) + "]["+rx.cap(3)+ rx.cap(4)+ rx.cap(5)+"]["+rjname+"]"+rx.cap(1)+rjtype+"."+rjfile.suffix() ;
                 newname.replace("?","？");
                 newname.replace("~","～");
@@ -111,9 +110,9 @@ void MainWindow::on_butRename_clicked()
                 SendMsg(newname);
                 QDir myDir(currentDirectory);
                 if(myDir.rename(oldname,newname)){
-                    SendMsg("rename success");
+                    SendMsg("Rename.... <font size=6 color=\"blue\">success</font>");
                 }else{
-                    SendMsg("rename fail");
+                    SendMsg("Rename.... <font size=6 color=\"red\">fail</font>");
                 }
 
             }
@@ -122,8 +121,11 @@ void MainWindow::on_butRename_clicked()
 }
 void MainWindow::SendMsg(QString msg)
 {
-    this->msg += msg +"\n";
-    ui->plainTextEdit->setPlainText(this->msg);
-    QScrollBar *sb = ui->plainTextEdit->verticalScrollBar();
+
+    ui->textEdit->insertHtml(msg);
+    ui->textEdit->insertPlainText("\n");
+
+    QScrollBar *sb = ui->textEdit->verticalScrollBar();
     sb->setValue(sb->maximum());
+
 }
