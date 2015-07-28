@@ -11,7 +11,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    msg ="";
+
 }
 
 MainWindow::~MainWindow()
@@ -21,7 +21,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_butOD_clicked()
 {
-
+    msg ="";
     SendMsg("Open Directory...");
 
     ui->listWidget->clear();
@@ -42,7 +42,7 @@ void MainWindow::on_butOD_clicked()
 
 void MainWindow::on_butRename_clicked()
 {
-    SendMsg("Downloading Info..");
+
 
     QString path;
     if(!currentFileList.isEmpty()){
@@ -55,7 +55,7 @@ void MainWindow::on_butRename_clicked()
             if(rjname==""){
                 continue;
             }
-
+            SendMsg("Downloading Info..");
             path ="http://www.dlsite.com/maniax/work/=/product_id/"+rjname;
             QUrl url(path);
             QNetworkAccessManager manager;
@@ -93,7 +93,7 @@ void MainWindow::on_butRename_clicked()
                 QFileInfo rjfile(currentDirectory+currentFileList.at(i));
                 QString oldname=currentFileList.at(i);
 
-                SendMsg("File : "+ oldname);
+                SendMsg("File : ");
                 SendMsg(oldname);
                 SendMsg("rename to ");
                 QString newname="["+rx.cap(2) + "]["+rx.cap(3)+ rx.cap(4)+ rx.cap(5)+"]["+rjname+"]"+rx.cap(1)+rjtype+"."+rjfile.suffix() ;
