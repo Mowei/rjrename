@@ -26,7 +26,7 @@ void MainWindow::on_butOD_clicked()
     ui->plainTextEdit->setPlainText(msg);
     ui->listWidget->clear();
     currentDirectory = QFileDialog::getExistingDirectory(this,
-                                                         tr("Open Directory"),"/");//QDir::currentPath()
+                                                         tr("Open Directory"),QDir::homePath()+"/Desktop");
     QDir myDir(currentDirectory);
     myDir.setFilter(QDir::Files | QDir::Hidden | QDir::NoSymLinks);
     currentFileList=myDir.entryList();
@@ -102,7 +102,7 @@ void MainWindow::on_butRename_clicked()
                 newname.replace("~","～");
                 newname.replace("*","＊");
                 newname.replace("/","／");
-                newname.replace("\"","＼");
+                newname.replace("\\","＼");
                 newname.replace(":","：");
                 newname.replace("\"","＂");
                 newname.replace("<","＜");
