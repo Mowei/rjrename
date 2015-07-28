@@ -15,6 +15,7 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
+    void SendMsg(QString msg);
 
 private slots:
     void on_butOD_clicked();

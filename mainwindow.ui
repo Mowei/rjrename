@@ -27,6 +27,9 @@
       <property name="sizeAdjustPolicy">
        <enum>QAbstractScrollArea::AdjustToContents</enum>
       </property>
+      <property name="centerOnScroll">
+       <bool>false</bool>
+      </property>
      </widget>
     </item>
     <item>

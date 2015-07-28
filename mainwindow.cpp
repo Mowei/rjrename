@@ -4,14 +4,14 @@
 #include <QFileDialog>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
-
+#include <QScrollBar>
 //http://slproweb.com/products/Win32OpenSSL.html
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-
+    msg ="";
 }
 
 MainWindow::~MainWindow()
@@ -21,33 +21,32 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_butOD_clicked()
 {
-    msg +="";
-    msg +="Open Directory...\n" ;
-    ui->plainTextEdit->setPlainText(msg);
+
+    SendMsg("Open Directory...");
+
     ui->listWidget->clear();
     currentDirectory = QFileDialog::getExistingDirectory(this,
                                                          tr("Open Directory"),QDir::homePath()+"/Desktop");
     QDir myDir(currentDirectory);
     myDir.setFilter(QDir::Files | QDir::Hidden | QDir::NoSymLinks);
+    QStringList filters;
+    filters <<"*RJ*"<<"*rj*";
+    myDir.setNameFilters(filters);
     currentFileList=myDir.entryList();
-
     ui->listWidget->addItems(currentFileList);
     ui->listWidget->currentIndex();
 
-    msg +="Show FileList\n" ;
-    ui->plainTextEdit->setPlainText(msg);
+    SendMsg("Show FileList");
+
 }
 
 void MainWindow::on_butRename_clicked()
 {
-    msg +="ReName..\n";
-    ui->plainTextEdit->setPlainText(msg);
+    SendMsg("Downloading Info..");
 
     QString path;
     if(!currentFileList.isEmpty()){
         for(int i=0;i<currentFileList.size();i++){
-
-
             QRegExp rx("(RJ\\d{6})");
             rx.setMinimal(true);
             rx.indexIn(currentFileList.at(i), 0);
@@ -58,8 +57,6 @@ void MainWindow::on_butRename_clicked()
             }
 
             path ="http://www.dlsite.com/maniax/work/=/product_id/"+rjname;
-            qDebug()<<path;
-
             QUrl url(path);
             QNetworkAccessManager manager;
             QEventLoop loop;
@@ -74,11 +71,11 @@ void MainWindow::on_butRename_clicked()
                 QRegExp rx("<span itemprop=\"title\">.*<span itemprop=\"title\">.*<span itemprop=\"title\">(.*)</span></a>.*<span itemprop=\"brand\">(.*)<\/span><\/a>.*(\\d{2})年(\\d{2})月(\\d{2})日.*<tr><th>作品形式(.*)<tr><th>ファイル形式");
                 rx.setMinimal(true);
                 rx.indexIn(src, 0);
-                qDebug()<< rx.cap(1)<< rx.cap(2)<< rx.cap(3)<< rx.cap(4)<< rx.cap(5);
+                //qDebug()<< rx.cap(1)<< rx.cap(2)<< rx.cap(3)<< rx.cap(4)<< rx.cap(5);
 
                 if(rx.cap(1).isEmpty()||rx.cap(2).isEmpty()||rx.cap(5).isEmpty()){
-                    msg+="Page Not Found!\n";
-                    ui->plainTextEdit->setPlainText(msg);
+                    SendMsg("Page Not Found!");
+
                     continue;
                 }
 
@@ -87,16 +84,18 @@ void MainWindow::on_butRename_clicked()
                 int pos = 0;
                 QString rjtype;
                 while((pos = type.indexIn(rx.cap(6), pos)) != -1) {
-                    qDebug()<<type.cap(1);
+                    //qDebug()<<type.cap(1);
                     pos += type.matchedLength();
                     rjtype +="("+type.cap(1)+")";
                 }
 
+                SendMsg("ReName...");
                 QFileInfo rjfile(currentDirectory+currentFileList.at(i));
                 QString oldname=currentFileList.at(i);
-                msg += "File : "+ oldname +"\n";
 
-                msg += "rename to ";
+                SendMsg("File : "+ oldname);
+                SendMsg(oldname);
+                SendMsg("rename to ");
                 QString newname="["+rx.cap(2) + "]["+rx.cap(3)+ rx.cap(4)+ rx.cap(5)+"]["+rjname+"]"+rx.cap(1)+rjtype+"."+rjfile.suffix() ;
                 newname.replace("?","？");
                 newname.replace("~","～");
@@ -109,13 +108,22 @@ void MainWindow::on_butRename_clicked()
                 newname.replace(">","＞");
                 newname.replace("|","｜");
 
-                msg +=newname+"\n";
-                ui->plainTextEdit->setPlainText(msg);
-
+                SendMsg(newname);
                 QDir myDir(currentDirectory);
-                myDir.rename(oldname,newname);
+                if(myDir.rename(oldname,newname)){
+                    SendMsg("rename success");
+                }else{
+                    SendMsg("rename fail");
+                }
 
             }
         }
     }
+}
+void MainWindow::SendMsg(QString msg)
+{
+    this->msg += msg +"\n";
+    ui->plainTextEdit->setPlainText(this->msg);
+    QScrollBar *sb = ui->plainTextEdit->verticalScrollBar();
+    sb->setValue(sb->maximum());
 }
