@@ -20,7 +20,7 @@ public:
     QString GetRJname(QString name);
     QString NameCheck(QString name);
     QString DownloadInfo(QString path);
-    void DownloadImage(QString name);
+    void DownloadImage(QString filename);
     bool RJReName(QString filename);
 
 private slots:
@@ -31,6 +31,7 @@ private slots:
     void showContextMenuForWidget(const QPoint &pos);
     void MenuFileOpen();
     void MenuShowImage();
+    void MenuDLPage();
     void MenuReName();
 
 private:

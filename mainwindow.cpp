@@ -25,13 +25,20 @@ MainWindow::MainWindow(QWidget *parent) :
     contextMenu= new QMenu(tr("Context menu"), this);
     QAction *openfile =new QAction(tr("Open file"), this);
     QAction *showimage =new QAction(tr("Show image"), this);
+    QAction *dlpage =new QAction(tr("DL page"), this);
     QAction *renameact =new QAction(tr("ReName"), this);
+
     contextMenu->addAction(openfile);
     contextMenu->addAction(showimage);
+    contextMenu->addAction(dlpage);
+    contextMenu->addSeparator();
     contextMenu->addAction(renameact);
+
     connect(openfile, SIGNAL(triggered()), this, SLOT(MenuFileOpen()));
     connect(showimage, SIGNAL(triggered()), this, SLOT(MenuShowImage()));
+    connect(dlpage, SIGNAL(triggered()), this, SLOT(MenuDLPage()));
     connect(renameact, SIGNAL(triggered()), this, SLOT(MenuReName()));
+
 }
 
 MainWindow::~MainWindow()
@@ -51,9 +58,10 @@ void MainWindow::on_butOD_clicked()
 
 void MainWindow::on_butRename_clicked()
 {
-    if(!currentFileList.isEmpty()){
-        for(int i=0;i<currentFileList.size();i++){
-            if(!RJReName(currentFileList.at(i))){
+    QStringList filelist =currentFileList;
+    if(!filelist.isEmpty()){
+        for(int i=0;i<filelist.size();i++){
+            if(!RJReName(filelist.at(i))){
                 continue;
             }
         }
@@ -125,16 +133,16 @@ QString MainWindow::DownloadInfo(QString path)
 }
 void MainWindow::on_listWidget_itemDoubleClicked(QListWidgetItem *item)
 {
-    QString name =item->text();
-    DownloadImage(name);
+    QString filename =item->text();
+    DownloadImage(filename);
 }
-void MainWindow::DownloadImage(QString name)
+void MainWindow::DownloadImage(QString filename)
 {
     SendMsg("Loading Image...");
-    QString rjname= GetRJname(name);
+    QString rjname= GetRJname(filename);
     QString path ="http://www.dlsite.com/maniax/work/=/product_id/"+rjname;
     QString src =DownloadInfo(path);
-    SendMsg("File : "+name);
+    SendMsg("File : "+filename);
 
     if(!src.isEmpty()){
         QRegExp namerx("<span itemprop=\"title\">.*<span itemprop=\"title\">.*<span itemprop=\"title\">(.*)</span></a>.*<span itemprop=\"brand\">(.*)<\/span><\/a>.*(\\d{2})年(\\d{2})月(\\d{2})日.*<tr><th>作品形式(.*)<tr><th>ファイル形式");
@@ -150,7 +158,7 @@ void MainWindow::DownloadImage(QString name)
         //qDebug()<< rx.cap(1);
 
         if(rx.cap(1).isEmpty()){
-            SendMsg("Not Found!");
+            SendMsg("<font size=6 color=\"red\">Not Found!</font>");
         }else{
             SendMsg(newname);
             SendMsg("Image link : "+rx.cap(1));
@@ -181,10 +189,9 @@ bool MainWindow::RJReName(QString filename){
         QRegExp rx("<span itemprop=\"title\">.*<span itemprop=\"title\">.*<span itemprop=\"title\">(.*)</span></a>.*<span itemprop=\"brand\">(.*)<\/span><\/a>.*(\\d{2})年(\\d{2})月(\\d{2})日.*<tr><th>作品形式(.*)<tr><th>ファイル形式");
         rx.setMinimal(true);
         rx.indexIn(src, 0);
-        //qDebug()<< rx.cap(1)<< rx.cap(2)<< rx.cap(3)<< rx.cap(4)<< rx.cap(5);
 
         if(rx.cap(1).isEmpty()||rx.cap(2).isEmpty()||rx.cap(5).isEmpty()){
-            SendMsg("Page Not Found!");
+            SendMsg("<font size=6 color=\"red\">Page Not Found!</font>");
             return false;
         }
 
@@ -203,7 +210,7 @@ bool MainWindow::RJReName(QString filename){
         SendMsg("File : ");
         SendMsg(oldname);
         SendMsg("ReName :");
-        QString newname="["+rx.cap(2) + "]["+rx.cap(3)+ rx.cap(4)+ rx.cap(5)+"]["+rjname+"]"+rx.cap(1)+rjtype+"."+rjfile.completeSuffix() ;
+        QString newname="["+rx.cap(2) + "]["+rx.cap(3)+ rx.cap(4)+ rx.cap(5)+"]["+rjname+"]"+rx.cap(1)+rjtype+"."+ rjfile.completeSuffix();
         newname =NameCheck(newname);
         SendMsg(newname);
         QDir myDir(currentDirectory);
@@ -227,16 +234,22 @@ void MainWindow::showContextMenuForWidget(const QPoint &pos)
 }
 void MainWindow::MenuFileOpen()
 {
-    QString name =ui->listWidget->selectedItems().at(0)->text();
-    QFileInfo fileInfo(currentDirectory,name) ;
+    QString filename =ui->listWidget->selectedItems().at(0)->text();
+    QFileInfo fileInfo(currentDirectory,filename) ;
     QDesktopServices::openUrl ( QUrl::fromLocalFile(fileInfo.absoluteFilePath()) );
     SendMsg("Open file!");
 }
 void MainWindow::MenuShowImage(){
-    QString name =ui->listWidget->selectedItems().at(0)->text();
-    DownloadImage(name);
+    QString filename =ui->listWidget->selectedItems().at(0)->text();
+    DownloadImage(filename);
+}
+void MainWindow::MenuDLPage(){
+    QString filename =ui->listWidget->selectedItems().at(0)->text();
+    QString rjname= GetRJname(filename);
+    QDesktopServices::openUrl ( QUrl("http://www.dlsite.com/maniax/work/=/product_id/"+rjname) );
+    SendMsg("Show DLpage!");
 }
 void MainWindow::MenuReName(){
-    QString name =ui->listWidget->selectedItems().at(0)->text();
-    RJReName(name);
+    QString filename =ui->listWidget->selectedItems().at(0)->text();
+    RJReName(filename);
 }
