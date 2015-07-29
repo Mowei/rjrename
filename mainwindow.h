@@ -2,9 +2,6 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QNetworkAccessManager>
-#include <QNetworkReply>
-#include <QFileSystemModel>
 #include <QListWidgetItem>
 namespace Ui {
 class MainWindow;
@@ -25,8 +22,6 @@ public:
 private slots:
     void on_butOD_clicked();
     void on_butRename_clicked();
-
-    //void on_listWidget_itemDoubleClicked(QListWidgetItem *item);
 
     void on_listWidget_itemDoubleClicked(QListWidgetItem *item);
 
