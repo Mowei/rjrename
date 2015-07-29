@@ -33,6 +33,7 @@ private slots:
     void MenuShowImage();
     void MenuDLPage();
     void MenuReName();
+    void MenuRJReName();
 
 private:
     Ui::MainWindow *ui;

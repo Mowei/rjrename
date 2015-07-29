@@ -27,19 +27,23 @@ MainWindow::MainWindow(QWidget *parent) :
     QAction *openfile =new QAction(tr("Open file"), this);
     QAction *showimage =new QAction(tr("Show image"), this);
     QAction *dlpage =new QAction(tr("DL page"), this);
-    QAction *renameact =new QAction(tr("ReName"), this);
+    QAction *renameactF =new QAction(tr("Format ReName"), this);
+    QAction *renameactR =new QAction(tr("RJNamber ReName"), this);
 
     contextMenu->addAction(openfile);
     contextMenu->addAction(showimage);
     contextMenu->addAction(dlpage);
     contextMenu->addSeparator();
-    contextMenu->addAction(renameact);
+    contextMenu->addAction(renameactF);
+    contextMenu->addAction(renameactR);
 
     connect(openfile, SIGNAL(triggered()), this, SLOT(MenuFileOpen()));
     connect(showimage, SIGNAL(triggered()), this, SLOT(MenuShowImage()));
     connect(dlpage, SIGNAL(triggered()), this, SLOT(MenuDLPage()));
-    connect(renameact, SIGNAL(triggered()), this, SLOT(MenuReName()));
+    connect(renameactF, SIGNAL(triggered()), this, SLOT(MenuReName()));
+    connect(renameactR, SIGNAL(triggered()), this, SLOT(MenuRJReName()));
 
+    ui->progressBar->setValue(0);
 }
 
 MainWindow::~MainWindow()
@@ -69,11 +73,15 @@ void MainWindow::on_butRename_clicked()
     switch (ret) {
     case QMessageBox::Yes:
         QStringList filelist =currentFileList;
+        ui->progressBar->setRange(0,filelist.size()-1);
+        int value=0;
         if(!filelist.isEmpty()){
             for(int i=0;i<filelist.size();i++){
                 if(!RJReName(filelist.at(i))){
                     continue;
                 }
+                value++;
+                ui->progressBar->setValue(value);
             }
         }
         break;
@@ -266,4 +274,22 @@ void MainWindow::MenuDLPage(){
 void MainWindow::MenuReName(){
     QString filename =ui->listWidget->selectedItems().at(0)->text();
     RJReName(filename);
+}
+void MainWindow::MenuRJReName(){
+    QString filename =ui->listWidget->selectedItems().at(0)->text();
+    QFileInfo rjfile(currentDirectory,filename);
+    QString rjname= GetRJname(filename);
+    SendMsg("File : ");
+    SendMsg(filename);
+    SendMsg("ReName :");
+    QString newname=rjname+"."+ rjfile.completeSuffix();
+    newname =NameCheck(newname);
+    SendMsg(newname);
+    QDir myDir(currentDirectory);
+    if(myDir.rename(filename,newname)){
+        SendMsg("Rename.... <font size=6 color=\"blue\">success</font>");
+    }else{
+        SendMsg("Rename.... <font size=6 color=\"red\">fail</font>");
+    }
+    ListReload();
 }
