@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
+#include <QFileSystemModel>
 namespace Ui {
 class MainWindow;
 }
@@ -22,11 +23,11 @@ private slots:
     void on_butRename_clicked();
 
 
-
 private:
     Ui::MainWindow *ui;
 
 public:
+    QFileSystemModel *model;
     QString currentDirectory;
     QStringList currentFileList;
 
