@@ -249,10 +249,13 @@ bool MainWindow::RJReName(QString filename){
 void MainWindow::showContextMenuForWidget(const QPoint &pos)
 {
     QModelIndex t = ui->listWidget->indexAt(pos);
-    if(ui->listWidget->count()>0){
+
+
+    if(ui->listWidget->count()>0 && t.row()!=-1){
         ui->listWidget->item(t.row())->setSelected(true);	// even a right click will select the item
         contextMenu->exec(mapToGlobal(pos));
     }
+
 }
 void MainWindow::MenuFileOpen()
 {
