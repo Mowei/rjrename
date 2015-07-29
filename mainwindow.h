@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QListWidgetItem>
+#include <QMenu>
 namespace Ui {
 class MainWindow;
 }
@@ -18,6 +19,7 @@ public:
     QString GetRJname(QString name);
     QString NameCheck(QString name);
     QString DownloadInfo(QString path);
+    void DownloadImage(QString name);
 
 private slots:
     void on_butOD_clicked();
@@ -25,12 +27,17 @@ private slots:
 
     void on_listWidget_itemDoubleClicked(QListWidgetItem *item);
 
+    void showContextMenuForWidget(const QPoint &pos);
+    void MenuFileOpen();
+    void MenuShowImage();
+
 private:
     Ui::MainWindow *ui;
 
 public:
     QString currentDirectory;
     QStringList currentFileList;
+    QMenu *contextMenu;
 
 };
 

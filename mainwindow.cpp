@@ -1,4 +1,4 @@
-#include "mainwindow.h"
+﻿#include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QDebug>
 #include <QFileDialog>
@@ -8,6 +8,8 @@
 #include <QFileIconProvider>
 #include <QStandardItem>
 #include <QImageReader>
+#include <QMenu>
+#include <QDesktopServices>
 //http://slproweb.com/products/Win32OpenSSL.html
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -15,6 +17,18 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     currentDirectory=QDir::homePath()+"/Desktop";
+    ui->listWidget->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->listWidget, SIGNAL(customContextMenuRequested(const QPoint &)),
+            SLOT(showContextMenuForWidget(const QPoint &)));
+
+
+    contextMenu= new QMenu(tr("Context menu"), this);
+    QAction *openfile =new QAction(tr("Open file"), this);
+    QAction *showimage =new QAction(tr("Show image"), this);
+    contextMenu->addAction(openfile);
+    contextMenu->addAction(showimage);
+    connect(openfile, SIGNAL(triggered()), this, SLOT(MenuFileOpen()));
+    connect(showimage, SIGNAL(triggered()), this, SLOT(MenuShowImage()));
 }
 
 MainWindow::~MainWindow()
@@ -46,9 +60,9 @@ void MainWindow::on_butOD_clicked()
         QListWidgetItem *item = new QListWidgetItem(ui->listWidget);
         QString name = fileInfo.fileName();
         item->setText(name);
-        //QFileIconProvider iconSource;
-        //QIcon icon = iconSource.icon(fileInfo);
-        //item->setIcon(icon);
+        QFileIconProvider iconSource;
+        QIcon icon = iconSource.icon(fileInfo);
+        item->setIcon(icon);
     }
 }
 
@@ -152,8 +166,12 @@ QString MainWindow::DownloadInfo(QString path)
 }
 void MainWindow::on_listWidget_itemDoubleClicked(QListWidgetItem *item)
 {
-    SendMsg("Loading Image...");
     QString name =item->text();
+    DownloadImage(name);
+}
+void MainWindow::DownloadImage(QString name)
+{
+    SendMsg("Loading Image...");
     QString rjname= GetRJname(name);
     QString path ="http://www.dlsite.com/maniax/work/=/product_id/"+rjname;
     QString src =DownloadInfo(path);
@@ -192,4 +210,24 @@ void MainWindow::on_listWidget_itemDoubleClicked(QListWidgetItem *item)
             SendMsg("Image OK");
         }
     }
+}
+
+void MainWindow::showContextMenuForWidget(const QPoint &pos)
+{
+    QModelIndex t = ui->listWidget->indexAt(pos);
+    if(ui->listWidget->count()>0){
+        ui->listWidget->item(t.row())->setSelected(true);	// even a right click will select the item
+        contextMenu->exec(mapToGlobal(pos));
+    }
+}
+void MainWindow::MenuFileOpen()
+{
+    QString name =ui->listWidget->selectedItems().at(0)->text();
+    QFileInfo fileInfo(currentDirectory,name) ;
+    QDesktopServices::openUrl ( QUrl::fromLocalFile(fileInfo.absoluteFilePath()) );
+    SendMsg("Open file!");
+}
+void MainWindow::MenuShowImage(){
+    QString name =ui->listWidget->selectedItems().at(0)->text();
+    DownloadImage(name);
 }
