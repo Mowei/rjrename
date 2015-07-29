@@ -167,7 +167,7 @@ void MainWindow::on_listWidget_itemDoubleClicked(QListWidgetItem *item)
 
         QString newname="["+namerx.cap(2) + "]["+namerx.cap(3)+ namerx.cap(4)+ namerx.cap(5)+"]["+rjname+"]"+namerx.cap(1);
         newname =NameCheck(newname);
-        SendMsg(newname);
+
 
         QRegExp rx("background-image: url\\((.*_main\.jpg)");
         rx.setMinimal(true);
@@ -177,6 +177,7 @@ void MainWindow::on_listWidget_itemDoubleClicked(QListWidgetItem *item)
         if(rx.cap(1).isEmpty()){
             SendMsg("Not Found!");
         }else{
+            SendMsg(newname);
             SendMsg("Image link : "+rx.cap(1));
             QNetworkAccessManager manager;
             QEventLoop loop;
