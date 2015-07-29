@@ -10,6 +10,7 @@
 #include <QImageReader>
 #include <QMenu>
 #include <QDesktopServices>
+#include <QMessageBox>
 //http://slproweb.com/products/Win32OpenSSL.html
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -58,14 +59,27 @@ void MainWindow::on_butOD_clicked()
 
 void MainWindow::on_butRename_clicked()
 {
-    QStringList filelist =currentFileList;
-    if(!filelist.isEmpty()){
-        for(int i=0;i<filelist.size();i++){
-            if(!RJReName(filelist.at(i))){
-                continue;
+
+    QMessageBox msgBox;
+    msgBox.setText("Files will be Renamed.");
+    msgBox.setInformativeText("Do you want to rename your Files?");
+    msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No );
+    msgBox.setDefaultButton(QMessageBox::No);
+    int ret = msgBox.exec();
+    switch (ret) {
+    case QMessageBox::Yes:
+        QStringList filelist =currentFileList;
+        if(!filelist.isEmpty()){
+            for(int i=0;i<filelist.size();i++){
+                if(!RJReName(filelist.at(i))){
+                    continue;
+                }
             }
         }
+        break;
     }
+
+
 }
 void MainWindow::ListReload(){
     ui->listWidget->clear();
