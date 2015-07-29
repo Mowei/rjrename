@@ -106,7 +106,7 @@
       <item>
        <widget class="QPushButton" name="butRename">
         <property name="text">
-         <string>Rename</string>
+         <string>AllRename</string>
         </property>
        </widget>
       </item>

@@ -25,10 +25,13 @@ MainWindow::MainWindow(QWidget *parent) :
     contextMenu= new QMenu(tr("Context menu"), this);
     QAction *openfile =new QAction(tr("Open file"), this);
     QAction *showimage =new QAction(tr("Show image"), this);
+    QAction *renameact =new QAction(tr("ReName"), this);
     contextMenu->addAction(openfile);
     contextMenu->addAction(showimage);
+    contextMenu->addAction(renameact);
     connect(openfile, SIGNAL(triggered()), this, SLOT(MenuFileOpen()));
     connect(showimage, SIGNAL(triggered()), this, SLOT(MenuShowImage()));
+    connect(renameact, SIGNAL(triggered()), this, SLOT(MenuReName()));
 }
 
 MainWindow::~MainWindow()
@@ -38,14 +41,26 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_butOD_clicked()
 {
-    ui->listWidget->clear();
     SendMsg("Open Directory...");
     currentDirectory = QFileDialog::getExistingDirectory(this,
                                                          tr("Open Directory"),currentDirectory);
     SendMsg("Directory Path : "+currentDirectory);
     this->setWindowTitle(currentDirectory);
+    ListReload();
+}
 
-
+void MainWindow::on_butRename_clicked()
+{
+    if(!currentFileList.isEmpty()){
+        for(int i=0;i<currentFileList.size();i++){
+            if(!RJReName(currentFileList.at(i))){
+                continue;
+            }
+        }
+    }
+}
+void MainWindow::ListReload(){
+    ui->listWidget->clear();
     QStringList filters;
     filters <<"*RJ*";
     QDir myDir(currentDirectory);
@@ -66,67 +81,11 @@ void MainWindow::on_butOD_clicked()
     }
 }
 
-void MainWindow::on_butRename_clicked()
-{
-    QString path;
-    if(!currentFileList.isEmpty()){
-        for(int i=0;i<currentFileList.size();i++){
-
-            QString rjname= GetRJname(currentFileList.at(i));
-            qDebug()<<rjname;
-            if(rjname==""){
-                continue;
-            }
-            path ="http://www.dlsite.com/maniax/work/=/product_id/"+rjname;
-            SendMsg("Downloading Info..");
-            SendMsg("Link : "+path);
-            QString src =DownloadInfo(path);
-
-            if(!src.isEmpty()){
-
-                QRegExp rx("<span itemprop=\"title\">.*<span itemprop=\"title\">.*<span itemprop=\"title\">(.*)</span></a>.*<span itemprop=\"brand\">(.*)<\/span><\/a>.*(\\d{2})年(\\d{2})月(\\d{2})日.*<tr><th>作品形式(.*)<tr><th>ファイル形式");
-                rx.setMinimal(true);
-                rx.indexIn(src, 0);
-                //qDebug()<< rx.cap(1)<< rx.cap(2)<< rx.cap(3)<< rx.cap(4)<< rx.cap(5);
-
-                if(rx.cap(1).isEmpty()||rx.cap(2).isEmpty()||rx.cap(5).isEmpty()){
-                    SendMsg("Page Not Found!");
-                    continue;
-                }
-
-                QRegExp type("title=\"(.*)\">");
-                type.setMinimal(true);
-                int pos = 0;
-                QString rjtype;
-                while((pos = type.indexIn(rx.cap(6), pos)) != -1) {
-                    //qDebug()<<type.cap(1);
-                    pos += type.matchedLength();
-                    rjtype +="("+type.cap(1)+")";
-                }
-                QFileInfo rjfile(currentDirectory+currentFileList.at(i));
-                QString oldname=currentFileList.at(i);
-                SendMsg("File : ");
-                SendMsg(oldname);
-                SendMsg("ReName :");
-                QString newname="["+rx.cap(2) + "]["+rx.cap(3)+ rx.cap(4)+ rx.cap(5)+"]["+rjname+"]"+rx.cap(1)+rjtype+"."+rjfile.completeSuffix() ;
-                newname =NameCheck(newname);
-                SendMsg(newname);
-                QDir myDir(currentDirectory);
-                if(myDir.rename(oldname,newname)){
-                    SendMsg("Rename.... <font size=6 color=\"blue\">success</font>");
-                }else{
-                    SendMsg("Rename.... <font size=6 color=\"red\">fail</font>");
-                }
-            }
-        }
-    }
-}
 void MainWindow::SendMsg(QString msg)
 {
     QTextCursor cursor = ui->textEdit->textCursor();
     cursor.movePosition(QTextCursor::End, QTextCursor::MoveAnchor);
     ui->textEdit->setTextCursor(cursor);
-
     ui->textEdit->insertHtml(msg);
     ui->textEdit->insertPlainText("\n");
     QScrollBar *sb = ui->textEdit->verticalScrollBar();
@@ -139,19 +98,19 @@ QString MainWindow::GetRJname(QString name)
     rx.indexIn(name.toUpper(), 0);
     return rx.cap(1);
 }
-QString MainWindow::NameCheck(QString name)
+QString MainWindow::NameCheck(QString rjname)
 {
-    name.replace("?","？");
-    name.replace("~","～");
-    name.replace("*","＊");
-    name.replace("/","／");
-    name.replace("\\","＼");
-    name.replace(":","：");
-    name.replace("\"","＂");
-    name.replace("<","＜");
-    name.replace(">","＞");
-    name.replace("|","｜");
-    return name;
+    rjname.replace("?","？");
+    rjname.replace("~","～");
+    rjname.replace("*","＊");
+    rjname.replace("/","／");
+    rjname.replace("\\","＼");
+    rjname.replace(":","：");
+    rjname.replace("\"","＂");
+    rjname.replace("<","＜");
+    rjname.replace(">","＞");
+    rjname.replace("|","｜");
+    return rjname;
 }
 QString MainWindow::DownloadInfo(QString path)
 {
@@ -175,7 +134,6 @@ void MainWindow::DownloadImage(QString name)
     QString rjname= GetRJname(name);
     QString path ="http://www.dlsite.com/maniax/work/=/product_id/"+rjname;
     QString src =DownloadInfo(path);
-
     SendMsg("File : "+name);
 
     if(!src.isEmpty()){
@@ -185,7 +143,6 @@ void MainWindow::DownloadImage(QString name)
 
         QString newname="["+namerx.cap(2) + "]["+namerx.cap(3)+ namerx.cap(4)+ namerx.cap(5)+"]["+rjname+"]"+namerx.cap(1);
         newname =NameCheck(newname);
-
 
         QRegExp rx("background-image: url\\((.*_main\.jpg)");
         rx.setMinimal(true);
@@ -211,6 +168,54 @@ void MainWindow::DownloadImage(QString name)
         }
     }
 }
+bool MainWindow::RJReName(QString filename){
+
+    QString rjname= GetRJname(filename);
+    QString path ="http://www.dlsite.com/maniax/work/=/product_id/"+rjname;
+    SendMsg("Downloading Info..");
+    SendMsg("Link : "+path);
+    QString src =DownloadInfo(path);
+
+    if(!src.isEmpty()){
+
+        QRegExp rx("<span itemprop=\"title\">.*<span itemprop=\"title\">.*<span itemprop=\"title\">(.*)</span></a>.*<span itemprop=\"brand\">(.*)<\/span><\/a>.*(\\d{2})年(\\d{2})月(\\d{2})日.*<tr><th>作品形式(.*)<tr><th>ファイル形式");
+        rx.setMinimal(true);
+        rx.indexIn(src, 0);
+        //qDebug()<< rx.cap(1)<< rx.cap(2)<< rx.cap(3)<< rx.cap(4)<< rx.cap(5);
+
+        if(rx.cap(1).isEmpty()||rx.cap(2).isEmpty()||rx.cap(5).isEmpty()){
+            SendMsg("Page Not Found!");
+            return false;
+        }
+
+        QRegExp type("title=\"(.*)\">");
+        type.setMinimal(true);
+        int pos = 0;
+        QString rjtype;
+        while((pos = type.indexIn(rx.cap(6), pos)) != -1) {
+            //qDebug()<<type.cap(1);
+            pos += type.matchedLength();
+            rjtype +="("+type.cap(1)+")";
+        }
+
+        QFileInfo rjfile(currentDirectory,filename);
+        QString oldname=filename;
+        SendMsg("File : ");
+        SendMsg(oldname);
+        SendMsg("ReName :");
+        QString newname="["+rx.cap(2) + "]["+rx.cap(3)+ rx.cap(4)+ rx.cap(5)+"]["+rjname+"]"+rx.cap(1)+rjtype+"."+rjfile.completeSuffix() ;
+        newname =NameCheck(newname);
+        SendMsg(newname);
+        QDir myDir(currentDirectory);
+        if(myDir.rename(oldname,newname)){
+            SendMsg("Rename.... <font size=6 color=\"blue\">success</font>");
+        }else{
+            SendMsg("Rename.... <font size=6 color=\"red\">fail</font>");
+        }
+    }
+    ListReload();
+    return true;
+}
 
 void MainWindow::showContextMenuForWidget(const QPoint &pos)
 {
@@ -230,4 +235,8 @@ void MainWindow::MenuFileOpen()
 void MainWindow::MenuShowImage(){
     QString name =ui->listWidget->selectedItems().at(0)->text();
     DownloadImage(name);
+}
+void MainWindow::MenuReName(){
+    QString name =ui->listWidget->selectedItems().at(0)->text();
+    RJReName(name);
 }

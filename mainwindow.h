@@ -15,21 +15,23 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
+    void ListReload();
     void SendMsg(QString msg);
     QString GetRJname(QString name);
     QString NameCheck(QString name);
     QString DownloadInfo(QString path);
     void DownloadImage(QString name);
+    bool RJReName(QString filename);
 
 private slots:
     void on_butOD_clicked();
     void on_butRename_clicked();
-
     void on_listWidget_itemDoubleClicked(QListWidgetItem *item);
 
     void showContextMenuForWidget(const QPoint &pos);
     void MenuFileOpen();
     void MenuShowImage();
+    void MenuReName();
 
 private:
     Ui::MainWindow *ui;
