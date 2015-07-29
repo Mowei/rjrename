@@ -94,7 +94,7 @@ void MainWindow::on_butRename_clicked()
                 SendMsg("File : ");
                 SendMsg(oldname);
                 SendMsg("ReName :");
-                QString newname="["+rx.cap(2) + "]["+rx.cap(3)+ rx.cap(4)+ rx.cap(5)+"]["+rjname+"]"+rx.cap(1)+rjtype+"."+rjfile.suffix() ;
+                QString newname="["+rx.cap(2) + "]["+rx.cap(3)+ rx.cap(4)+ rx.cap(5)+"]["+rjname+"]"+rx.cap(1)+rjtype+"."+rjfile.completeSuffix() ;
                 newname =NameCheck(newname);
                 SendMsg(newname);
                 QDir myDir(currentDirectory);
