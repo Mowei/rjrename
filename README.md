@@ -11,6 +11,8 @@ RJ number =RJXXXXXX
 </br>
 Format name=[社團][時間][RJ號]名稱(類型)
 </br>
+左鍵雙擊檔案</br>
+下方區塊會載入圖片</br>
 對檔案與下方圖片點右鍵有選單可操作
 </br>
 =====
