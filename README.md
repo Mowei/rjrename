@@ -17,8 +17,8 @@ Format name=[社團][時間][RJ號]名稱(類型)
 左鍵雙擊檔案</br>
 下方區塊會載入圖片</br>
 對檔案與下方圖片點右鍵有選單可操作
-<a href="http://imgur.com/pCJtY5x"><img src="http://i.imgur.com/pCJtY5x.png" title="source: imgur.com" /></a>
 </br>
+<a href="http://imgur.com/pCJtY5x"><img src="http://i.imgur.com/pCJtY5x.png" title="source: imgur.com" /></a>
 </br>
 檔案區塊選單依序為:</br>
 開啟檔案</br>
