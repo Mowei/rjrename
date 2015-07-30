@@ -19,10 +19,13 @@ public:
     void SendMsg(QString msg);
     QString GetRJname(QString filename);
     QString NameCheck(QString newname);
-    QString DownloadInfo(QString path);
+    QByteArray DownloadInfo(QString path);
     QStringList GetFormatNname(QString pagedata);
     void DownloadImage(QString filename);
     bool RJReName(QString filename);
+    bool MoveFile(QString dirsrc,QString dirtarget,QString filename);
+    bool CreateFolder(QString dirpath,QString foldername);
+    bool DownloadSaveImage(QString dir,QString imagesrc);
 
 private slots:
     void on_butOD_clicked();
@@ -39,9 +42,13 @@ private slots:
     void MenuRJReName();
 
     void MenuSaveImage();
-    void MenuSaveDirImage();
+    void MenuSaveRJDirImage();
     void MenuSaveFormatDirImage();
 
+
+    void on_butCFMF_clicked();
+
+    void on_butCFMFDL_clicked();
 
 private:
     Ui::MainWindow *ui;

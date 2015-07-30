@@ -11,7 +11,7 @@
 #include <QMenu>
 #include <QDesktopServices>
 #include <QMessageBox>
-//http://slproweb.com/products/Win32OpenSSL.html
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -61,7 +61,7 @@ MainWindow::MainWindow(QWidget *parent) :
     contextMenuLabel->addAction(saveformatdirimage);
 
     connect(saveimage, SIGNAL(triggered()), this, SLOT(MenuSaveImage()));
-    connect(savedirimage, SIGNAL(triggered()), this, SLOT(MenuSaveDirImage()));
+    connect(savedirimage, SIGNAL(triggered()), this, SLOT(MenuSaveRJDirImage()));
     connect(saveformatdirimage, SIGNAL(triggered()), this, SLOT(MenuSaveFormatDirImage()));
 }
 
@@ -85,7 +85,7 @@ void MainWindow::on_butRename_clicked()
 {
     QMessageBox msgBox;
     msgBox.setText("Files will be Renamed.");
-    msgBox.setInformativeText("Do you want to Renamed your Files?");
+    msgBox.setInformativeText("Do you want to Rename your Files?");
     msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No );
     msgBox.setDefaultButton(QMessageBox::No);
     int ret = msgBox.exec();
@@ -158,7 +158,7 @@ QString MainWindow::NameCheck(QString newname)
     newname.replace("|","｜");
     return newname;
 }
-QString MainWindow::DownloadInfo(QString path)
+QByteArray MainWindow::DownloadInfo(QString path)
 {
     QUrl url(path);
     QNetworkAccessManager manager;
@@ -166,8 +166,8 @@ QString MainWindow::DownloadInfo(QString path)
     QNetworkReply *reply = manager.get(QNetworkRequest(url));
     QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
     loop.exec();
-    QString src(reply->readAll());
-    return src;
+    QByteArray data = reply->readAll();
+    return data;
 }
 QStringList MainWindow::GetFormatNname(QString src)
 {
@@ -233,12 +233,8 @@ void MainWindow::DownloadImage(QString filename)
         }else{
             SendMsg(newname);
             SendMsg("Image link : "+rx.cap(1));
-            QNetworkAccessManager manager;
-            QEventLoop loop;
-            QNetworkReply *reply = manager.get(QNetworkRequest(dlsiteimage.at(0)));
-            QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
-            loop.exec();
-            QByteArray jpegData = reply->readAll();
+
+            QByteArray jpegData = DownloadInfo(dlsiteimage.at(0));
             QPixmap pixmap;
             pixmap.loadFromData(jpegData);
             ui->label->setPixmap(pixmap);
@@ -276,6 +272,40 @@ bool MainWindow::RJReName(QString filename)
         }
     }
     ListReload();
+    return true;
+}
+bool MainWindow::MoveFile(QString dirsrc,QString dirtarget,QString filename)
+{
+    QFile myfile(dirsrc+"/"+filename);
+    myfile.rename(dirtarget+"/"+filename);
+    ListReload();
+}
+
+bool MainWindow::CreateFolder(QString dirpath,QString foldername){
+    SendMsg("Create Folder...");
+    QDir createfolder(dirpath);
+    if(!createfolder.mkdir(foldername)){
+        SendMsg("<font size=6 color=\"red\">Create Fail!</font>");
+        return false;
+    }
+    SendMsg("Create Success!");
+    return true;
+}
+bool MainWindow::DownloadSaveImage(QString dir,QString imagesrc)
+{
+    SendMsg("Save Image...");
+    QFileInfo fileInfo(imagesrc);
+    QByteArray data = DownloadInfo(imagesrc);
+    QFile file(dir+"/"+fileInfo.fileName());
+    file.open(QIODevice::WriteOnly);
+    SendMsg("Image :"+fileInfo.fileName());
+    int flag =file.write(data);
+    file.close();
+    if(flag==-1){
+        SendMsg("Save Error!");
+        return false;
+    }
+    SendMsg("Save!");
     return true;
 }
 
@@ -317,7 +347,7 @@ void MainWindow::MenuReName()
 {
     QMessageBox msgBox;
     msgBox.setText("File will be Renamed.");
-    msgBox.setInformativeText("Do you want to Renamed your File?");
+    msgBox.setInformativeText("Do you want to Rename your File?");
     msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No );
     msgBox.setDefaultButton(QMessageBox::No);
     int ret = msgBox.exec();
@@ -332,7 +362,7 @@ void MainWindow::MenuRJReName()
 {
     QMessageBox msgBox;
     msgBox.setText("File will be Renamed.");
-    msgBox.setInformativeText("Do you want to Renamed your File?");
+    msgBox.setInformativeText("Do you want to Rename your File?");
     msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No );
     msgBox.setDefaultButton(QMessageBox::No);
     int ret = msgBox.exec();
@@ -368,64 +398,28 @@ void MainWindow::on_label_customContextMenuRequested(const QPoint &pos)
 void MainWindow::MenuSaveImage()
 {
     if(!dlsiteimage.isEmpty()){
-        SendMsg("Save Image...");
         ui->progressBar->setRange(0,dlsiteimage.count());
         int value=0;
         for(int i=0;i<dlsiteimage.count();i++){
-            QFileInfo fileInfo(dlsiteimage.at(i));
-
-            QNetworkAccessManager manager;
-            QEventLoop loop;
-            QNetworkReply *reply = manager.get(QNetworkRequest(dlsiteimage.at(i)));
-            QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
-            loop.exec();
-            QByteArray data = reply->readAll();
-            QFile file(currentDirectory+"/"+fileInfo.fileName());
-            file.open(QIODevice::WriteOnly);
-            SendMsg("Image :"+fileInfo.fileName());
-            if(file.write(data)==-1){
-                SendMsg("<font size=6 color=\"red\">Save Error!</font>");
-            }
-            file.close();
-            SendMsg("Save!");
+            DownloadSaveImage(currentDirectory,dlsiteimage.at(i));
             value++;
             ui->progressBar->setValue(value);
         }
     }
 }
-void MainWindow::MenuSaveDirImage()
+void MainWindow::MenuSaveRJDirImage()
 {
     if(!dlsiteimage.isEmpty()){
         QString foldername=ui->label_2->text();
-        SendMsg("Create Folder...");
-        QDir createfolder(currentDirectory);
-        if(!createfolder.mkdir(foldername)){
-            SendMsg("<font size=6 color=\"red\">Create Fail!</font>");
+        if(!CreateFolder(currentDirectory, foldername))
+        {
             return;
         }
-        SendMsg("Create Success!");
         SendMsg(currentDirectory+"/"+foldername);
-
-        SendMsg("Save Image...");
         ui->progressBar->setRange(0,dlsiteimage.count());
         int value=0;
         for(int i=0;i<dlsiteimage.count();i++){
-            QFileInfo fileInfo(dlsiteimage.at(i));
-
-            QNetworkAccessManager manager;
-            QEventLoop loop;
-            QNetworkReply *reply = manager.get(QNetworkRequest(dlsiteimage.at(i)));
-            QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
-            loop.exec();
-            QByteArray data = reply->readAll();
-            QFile file(currentDirectory+"/"+foldername+"/"+fileInfo.fileName());
-            file.open(QIODevice::WriteOnly);
-            SendMsg("Image :"+fileInfo.fileName());
-            if(file.write(data)==-1){
-                SendMsg("Save Error!");
-            }
-            file.close();
-            SendMsg("Save!");
+            DownloadSaveImage(currentDirectory+"/"+foldername,dlsiteimage.at(i));
             value++;
             ui->progressBar->setValue(value);
         }
@@ -439,37 +433,77 @@ void MainWindow::MenuSaveFormatDirImage()
         QString src=DownloadInfo(path);
         QStringList nameformat =GetFormatNname(src);
         QString foldername="["+nameformat.at(0) + "]["+nameformat.at(1)+ nameformat.at(2)+ nameformat.at(3)+"]["+rjname+"]"+nameformat.at(4);
-        SendMsg("Create Folder...");
-        QDir createfolder(currentDirectory);
-        if(!createfolder.mkdir(foldername)){
-            SendMsg("<font size=6 color=\"red\">Create Fail!</font>");
+
+        if(!CreateFolder(currentDirectory, foldername))
+        {
             return;
         }
-        SendMsg("Create Success!");
         SendMsg(currentDirectory+"/"+foldername);
-
-        SendMsg("Save Image...");
         ui->progressBar->setRange(0,dlsiteimage.count());
         int value=0;
         for(int i=0;i<dlsiteimage.count();i++){
-            QFileInfo fileInfo(dlsiteimage.at(i));
-
-            QNetworkAccessManager manager;
-            QEventLoop loop;
-            QNetworkReply *reply = manager.get(QNetworkRequest(dlsiteimage.at(i)));
-            QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
-            loop.exec();
-            QByteArray data = reply->readAll();
-            QFile file(currentDirectory+"/"+foldername+"/"+fileInfo.fileName());
-            file.open(QIODevice::WriteOnly);
-            SendMsg("Image :"+fileInfo.fileName());
-            if(file.write(data)==-1){
-                SendMsg("Save Error!");
-            }
-            file.close();
-            SendMsg("Save!");
+            DownloadSaveImage(currentDirectory+"/"+foldername,dlsiteimage.at(i));
             value++;
             ui->progressBar->setValue(value);
         }
+    }
+}
+
+void MainWindow::on_butCFMF_clicked()
+{
+    QMessageBox msgBox;
+    msgBox.setText("Files will be Moved.");
+    msgBox.setInformativeText("Do you want to Move your Files?");
+    msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No );
+    msgBox.setDefaultButton(QMessageBox::No);
+    int ret = msgBox.exec();
+    switch (ret) {
+    case QMessageBox::Yes:
+        QStringList filelist =currentFileList;
+        ui->progressBar->setRange(0,filelist.count());
+        int value=0;
+        if(!filelist.isEmpty()){
+            for(int i=0;i<filelist.count();i++){
+                QString filename=filelist.at(i);
+                QString foldername=GetRJname(filelist.at(i));
+                CreateFolder(currentDirectory, foldername);
+                MoveFile(currentDirectory,currentDirectory+"/"+foldername,filename);
+                value++;
+                ui->progressBar->setValue(value);
+            }
+        }
+        break;
+    }
+}
+
+void MainWindow::on_butCFMFDL_clicked()
+{
+    QMessageBox msgBox;
+    msgBox.setText("Files will be Moved.");
+    msgBox.setInformativeText("Do you want to Move your Files?");
+    msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No );
+    msgBox.setDefaultButton(QMessageBox::No);
+    int ret = msgBox.exec();
+    switch (ret) {
+    case QMessageBox::Yes:
+        QStringList filelist =currentFileList;
+        ui->progressBar->setRange(0,filelist.count());
+        int value=0;
+        if(!filelist.isEmpty()){
+            for(int i=0;i<filelist.count();i++){
+                QString filename=filelist.at(i);
+                QString foldername=GetRJname(filelist.at(i));
+                CreateFolder(currentDirectory, foldername);
+                MoveFile(currentDirectory,currentDirectory+"/"+foldername,filename);
+                DownloadImage(filename);
+
+                for(int i=0;i<dlsiteimage.count();i++){
+                    DownloadSaveImage(currentDirectory+"/"+foldername,dlsiteimage.at(i));
+                }
+                value++;
+                ui->progressBar->setValue(value);
+            }
+        }
+        break;
     }
 }
