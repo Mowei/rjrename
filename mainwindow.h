@@ -17,9 +17,10 @@ public:
     ~MainWindow();
     void ListReload();
     void SendMsg(QString msg);
-    QString GetRJname(QString name);
-    QString NameCheck(QString name);
+    QString GetRJname(QString filename);
+    QString NameCheck(QString newname);
     QString DownloadInfo(QString path);
+    QStringList GetFormatNname(QString pagedata);
     void DownloadImage(QString filename);
     bool RJReName(QString filename);
 
@@ -39,6 +40,7 @@ private slots:
 
     void MenuSaveImage();
     void MenuSaveDirImage();
+    void MenuSaveFormatDirImage();
 
 
 private:

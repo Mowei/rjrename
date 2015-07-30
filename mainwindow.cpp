@@ -54,12 +54,15 @@ MainWindow::MainWindow(QWidget *parent) :
     contextMenuLabel= new QMenu(tr("Context menu"), this);
     QAction *saveimage =new QAction(tr("Save Images"), this);
     QAction *savedirimage =new QAction(tr("Create Folder and Save Images"), this);
+    QAction *saveformatdirimage =new QAction(tr("Create Format Name Folder and Save Images"), this);
 
     contextMenuLabel->addAction(saveimage);
     contextMenuLabel->addAction(savedirimage);
+    contextMenuLabel->addAction(saveformatdirimage);
 
-    connect(savedirimage, SIGNAL(triggered()), this, SLOT(MenuSaveImage()));
+    connect(saveimage, SIGNAL(triggered()), this, SLOT(MenuSaveImage()));
     connect(savedirimage, SIGNAL(triggered()), this, SLOT(MenuSaveDirImage()));
+    connect(saveformatdirimage, SIGNAL(triggered()), this, SLOT(MenuSaveFormatDirImage()));
 }
 
 MainWindow::~MainWindow()
@@ -134,26 +137,26 @@ void MainWindow::SendMsg(QString msg)
     QScrollBar *sb = ui->textEdit->verticalScrollBar();
     sb->setValue(sb->maximum());
 }
-QString MainWindow::GetRJname(QString name)
+QString MainWindow::GetRJname(QString filename)
 {
     QRegExp rx("(RJ\\d{6})");
     rx.setMinimal(true);
-    rx.indexIn(name.toUpper(), 0);
+    rx.indexIn(filename.toUpper(), 0);
     return rx.cap(1);
 }
-QString MainWindow::NameCheck(QString rjname)
+QString MainWindow::NameCheck(QString newname)
 {
-    rjname.replace("?","？");
-    rjname.replace("~","～");
-    rjname.replace("*","＊");
-    rjname.replace("/","／");
-    rjname.replace("\\","＼");
-    rjname.replace(":","：");
-    rjname.replace("\"","＂");
-    rjname.replace("<","＜");
-    rjname.replace(">","＞");
-    rjname.replace("|","｜");
-    return rjname;
+    newname.replace("?","？");
+    newname.replace("~","～");
+    newname.replace("*","＊");
+    newname.replace("/","／");
+    newname.replace("\\","＼");
+    newname.replace(":","：");
+    newname.replace("\"","＂");
+    newname.replace("<","＜");
+    newname.replace(">","＞");
+    newname.replace("|","｜");
+    return newname;
 }
 QString MainWindow::DownloadInfo(QString path)
 {
@@ -166,6 +169,30 @@ QString MainWindow::DownloadInfo(QString path)
     QString src(reply->readAll());
     return src;
 }
+QStringList MainWindow::GetFormatNname(QString src)
+{
+    QStringList name;
+    QRegExp rx("<span itemprop=\"title\">.*<span itemprop=\"title\">.*<span itemprop=\"title\">(.*)</span></a>.*<span itemprop=\"brand\">(.*)<\/span><\/a>.*(\\d{2})年(\\d{2})月(\\d{2})日.*<tr><th>作品形式(.*)<tr><th>ファイル形式");
+    rx.setMinimal(true);
+    rx.indexIn(src, 0);
+
+    if(rx.cap(1).isEmpty()||rx.cap(2).isEmpty()||rx.cap(5).isEmpty()){
+        SendMsg("<font size=6 color=\"red\">Page Not Found!</font>");
+        return name;
+    }
+
+    QRegExp type("title=\"(.*)\">");
+    type.setMinimal(true);
+    int pos = 0;
+    QString rjtype;
+    while((pos = type.indexIn(rx.cap(6), pos)) != -1) {
+        pos += type.matchedLength();
+        rjtype +="("+type.cap(1)+")";
+    }
+    name<<rx.cap(2)<<rx.cap(3)<<rx.cap(4)<<rx.cap(5)<<rx.cap(1)<<rjtype;
+    return name;
+}
+
 void MainWindow::on_listWidget_itemDoubleClicked(QListWidgetItem *item)
 {
     QString filename =item->text();
@@ -229,31 +256,16 @@ bool MainWindow::RJReName(QString filename)
     QString src =DownloadInfo(path);
 
     if(!src.isEmpty()){
-        QRegExp rx("<span itemprop=\"title\">.*<span itemprop=\"title\">.*<span itemprop=\"title\">(.*)</span></a>.*<span itemprop=\"brand\">(.*)<\/span><\/a>.*(\\d{2})年(\\d{2})月(\\d{2})日.*<tr><th>作品形式(.*)<tr><th>ファイル形式");
-        rx.setMinimal(true);
-        rx.indexIn(src, 0);
-
-        if(rx.cap(1).isEmpty()||rx.cap(2).isEmpty()||rx.cap(5).isEmpty()){
-            SendMsg("<font size=6 color=\"red\">Page Not Found!</font>");
+        QStringList nameformat=GetFormatNname(src);
+        if(nameformat.isEmpty()){
             return false;
         }
-
-        QRegExp type("title=\"(.*)\">");
-        type.setMinimal(true);
-        int pos = 0;
-        QString rjtype;
-        while((pos = type.indexIn(rx.cap(6), pos)) != -1) {
-            //qDebug()<<type.cap(1);
-            pos += type.matchedLength();
-            rjtype +="("+type.cap(1)+")";
-        }
-
         QFileInfo rjfile(currentDirectory,filename);
         QString oldname=filename;
         SendMsg("File : ");
         SendMsg(oldname);
         SendMsg("ReName :");
-        QString newname="["+rx.cap(2) + "]["+rx.cap(3)+ rx.cap(4)+ rx.cap(5)+"]["+rjname+"]"+rx.cap(1)+rjtype+"."+ rjfile.completeSuffix();
+        QString newname="["+nameformat.at(0) + "]["+nameformat.at(1)+ nameformat.at(2)+ nameformat.at(3)+"]["+rjname+"]"+nameformat.at(4)+nameformat.at(5)+"."+ rjfile.completeSuffix();
         newname =NameCheck(newname);
         SendMsg(newname);
         QDir myDir(currentDirectory);
@@ -361,8 +373,6 @@ void MainWindow::MenuSaveImage()
         int value=0;
         for(int i=0;i<dlsiteimage.count();i++){
             QFileInfo fileInfo(dlsiteimage.at(i));
-            QString url=fileInfo.absoluteFilePath();
-            qDebug()<<url;
 
             QNetworkAccessManager manager;
             QEventLoop loop;
@@ -391,16 +401,58 @@ void MainWindow::MenuSaveDirImage()
         QDir createfolder(currentDirectory);
         if(!createfolder.mkdir(foldername)){
             SendMsg("<font size=6 color=\"red\">Create Fail!</font>");
+            return;
         }
         SendMsg("Create Success!");
+        SendMsg(currentDirectory+"/"+foldername);
 
         SendMsg("Save Image...");
         ui->progressBar->setRange(0,dlsiteimage.count());
         int value=0;
         for(int i=0;i<dlsiteimage.count();i++){
             QFileInfo fileInfo(dlsiteimage.at(i));
-            QString url=fileInfo.absoluteFilePath();
-            qDebug()<<url;
+
+            QNetworkAccessManager manager;
+            QEventLoop loop;
+            QNetworkReply *reply = manager.get(QNetworkRequest(dlsiteimage.at(i)));
+            QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
+            loop.exec();
+            QByteArray data = reply->readAll();
+            QFile file(currentDirectory+"/"+foldername+"/"+fileInfo.fileName());
+            file.open(QIODevice::WriteOnly);
+            SendMsg("Image :"+fileInfo.fileName());
+            if(file.write(data)==-1){
+                SendMsg("Save Error!");
+            }
+            file.close();
+            SendMsg("Save!");
+            value++;
+            ui->progressBar->setValue(value);
+        }
+    }
+}
+void MainWindow::MenuSaveFormatDirImage()
+{
+    if(!dlsiteimage.isEmpty()){
+        QString rjname=ui->label_2->text();
+        QString path ="http://www.dlsite.com/maniax/work/=/product_id/"+rjname;
+        QString src=DownloadInfo(path);
+        QStringList nameformat =GetFormatNname(src);
+        QString foldername="["+nameformat.at(0) + "]["+nameformat.at(1)+ nameformat.at(2)+ nameformat.at(3)+"]["+rjname+"]"+nameformat.at(4);
+        SendMsg("Create Folder...");
+        QDir createfolder(currentDirectory);
+        if(!createfolder.mkdir(foldername)){
+            SendMsg("<font size=6 color=\"red\">Create Fail!</font>");
+            return;
+        }
+        SendMsg("Create Success!");
+        SendMsg(currentDirectory+"/"+foldername);
+
+        SendMsg("Save Image...");
+        ui->progressBar->setRange(0,dlsiteimage.count());
+        int value=0;
+        for(int i=0;i<dlsiteimage.count();i++){
+            QFileInfo fileInfo(dlsiteimage.at(i));
 
             QNetworkAccessManager manager;
             QEventLoop loop;
