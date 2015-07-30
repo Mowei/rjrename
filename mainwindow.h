@@ -21,7 +21,7 @@ public:
     QString NameCheck(QString newname);
     QByteArray DownloadInfo(QString path);
     QStringList GetFormatNname(QString pagedata);
-    void DownloadImage(QString filename);
+    void DownloadImage(QString filename);//get imageurl save dlsiteimage
     bool RJReName(QString filename);
     bool MoveFile(QString dirsrc,QString dirtarget,QString filename);
     bool CreateFolder(QString dirpath,QString foldername);
@@ -47,8 +47,9 @@ private slots:
 
 
     void on_butCFMF_clicked();
-
     void on_butCFMFDL_clicked();
+    void on_butCFMF_FN_clicked();
+    void on_butCFMFDL_FN_clicked();
 
 private:
     Ui::MainWindow *ui;

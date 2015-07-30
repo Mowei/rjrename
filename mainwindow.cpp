@@ -215,6 +215,7 @@ void MainWindow::DownloadImage(QString filename)
         QString newname="["+namerx.cap(2) + "]["+namerx.cap(3)+ namerx.cap(4)+ namerx.cap(5)+"]["+rjname+"]"+namerx.cap(1);
         newname =NameCheck(newname);
 
+
         QRegExp rx("background-image: url\\((.*_main\.jpg)");
         rx.setMinimal(true);
         rx.indexIn(src, 0);
@@ -230,6 +231,7 @@ void MainWindow::DownloadImage(QString filename)
 
         if(rx.cap(1).isEmpty()){
             SendMsg("<font size=6 color=\"red\">Not Found!</font>");
+            dlsiteimage.clear();
         }else{
             SendMsg(newname);
             SendMsg("Image link : "+rx.cap(1));
@@ -289,6 +291,7 @@ bool MainWindow::CreateFolder(QString dirpath,QString foldername){
         return false;
     }
     SendMsg("Create Success!");
+    SendMsg(currentDirectory+"/"+foldername);
     return true;
 }
 bool MainWindow::DownloadSaveImage(QString dir,QString imagesrc)
@@ -327,7 +330,7 @@ void MainWindow::MenuFileOpen()
 }
 void MainWindow::MenuFolderOpen()
 {
-    QDesktopServices::openUrl(QUrl(currentDirectory));
+    QDesktopServices::openUrl(QUrl::fromLocalFile(currentDirectory));
     SendMsg("Open Folder!");
 }
 
@@ -415,7 +418,6 @@ void MainWindow::MenuSaveRJDirImage()
         {
             return;
         }
-        SendMsg(currentDirectory+"/"+foldername);
         ui->progressBar->setRange(0,dlsiteimage.count());
         int value=0;
         for(int i=0;i<dlsiteimage.count();i++){
@@ -432,13 +434,16 @@ void MainWindow::MenuSaveFormatDirImage()
         QString path ="http://www.dlsite.com/maniax/work/=/product_id/"+rjname;
         QString src=DownloadInfo(path);
         QStringList nameformat =GetFormatNname(src);
+        if(nameformat.isEmpty())
+        {
+            return;
+        }
         QString foldername="["+nameformat.at(0) + "]["+nameformat.at(1)+ nameformat.at(2)+ nameformat.at(3)+"]["+rjname+"]"+nameformat.at(4);
 
         if(!CreateFolder(currentDirectory, foldername))
         {
             return;
         }
-        SendMsg(currentDirectory+"/"+foldername);
         ui->progressBar->setRange(0,dlsiteimage.count());
         int value=0;
         for(int i=0;i<dlsiteimage.count();i++){
@@ -497,6 +502,86 @@ void MainWindow::on_butCFMFDL_clicked()
                 MoveFile(currentDirectory,currentDirectory+"/"+foldername,filename);
                 DownloadImage(filename);
 
+                for(int i=0;i<dlsiteimage.count();i++){
+                    DownloadSaveImage(currentDirectory+"/"+foldername,dlsiteimage.at(i));
+                }
+                value++;
+                ui->progressBar->setValue(value);
+            }
+        }
+        break;
+    }
+}
+
+void MainWindow::on_butCFMF_FN_clicked()
+{
+    QMessageBox msgBox;
+    msgBox.setText("Files will be Moved.");
+    msgBox.setInformativeText("Do you want to Move your Files?");
+    msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No );
+    msgBox.setDefaultButton(QMessageBox::No);
+    int ret = msgBox.exec();
+    switch (ret) {
+    case QMessageBox::Yes:
+        QStringList filelist =currentFileList;
+        ui->progressBar->setRange(0,filelist.count());
+        int value=0;
+        if(!filelist.isEmpty()){
+            for(int i=0;i<filelist.count();i++){
+                QString filename=filelist.at(i);
+                QString rjname =GetRJname(filename);
+                QString path ="http://www.dlsite.com/maniax/work/=/product_id/"+rjname;
+                QString src = DownloadInfo(path);
+                QStringList nameformat = GetFormatNname(src);
+                if(nameformat.isEmpty())
+                {
+                    value++;
+                    ui->progressBar->setValue(value);
+                    continue;
+                }
+                QString foldername="["+nameformat.at(0) + "]["+nameformat.at(1)+ nameformat.at(2)+ nameformat.at(3)+"]["+rjname+"]"+nameformat.at(4);
+
+                CreateFolder(currentDirectory, foldername);
+                MoveFile(currentDirectory,currentDirectory+"/"+foldername,filename);
+                value++;
+                ui->progressBar->setValue(value);
+            }
+        }
+        break;
+    }
+}
+
+void MainWindow::on_butCFMFDL_FN_clicked()
+{
+    QMessageBox msgBox;
+    msgBox.setText("Files will be Moved.");
+    msgBox.setInformativeText("Do you want to Move your Files?");
+    msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No );
+    msgBox.setDefaultButton(QMessageBox::No);
+    int ret = msgBox.exec();
+    switch (ret) {
+    case QMessageBox::Yes:
+        QStringList filelist =currentFileList;
+        ui->progressBar->setRange(0,filelist.count());
+        int value=0;
+        if(!filelist.isEmpty()){
+            for(int i=0;i<filelist.count();i++){
+                QString filename=filelist.at(i);
+                QString rjname =GetRJname(filename);
+                QString path ="http://www.dlsite.com/maniax/work/=/product_id/"+rjname;
+                QString src = DownloadInfo(path);
+                QStringList nameformat = GetFormatNname(src);
+                if(nameformat.isEmpty())
+                {
+                    value++;
+                    ui->progressBar->setValue(value);
+                    continue;
+                }
+                QString foldername="["+nameformat.at(0) + "]["+nameformat.at(1)+ nameformat.at(2)+ nameformat.at(3)+"]["+rjname+"]"+nameformat.at(4);
+
+                CreateFolder(currentDirectory, foldername);
+                MoveFile(currentDirectory,currentDirectory+"/"+foldername,filename);
+                DownloadImage(filename);
                 for(int i=0;i<dlsiteimage.count();i++){
                     DownloadSaveImage(currentDirectory+"/"+foldername,dlsiteimage.at(i));
                 }

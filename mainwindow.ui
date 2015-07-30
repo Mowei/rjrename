@@ -137,6 +137,27 @@
            </property>
           </widget>
          </item>
+         <item>
+          <widget class="QLabel" name="label_4">
+           <property name="text">
+            <string>Format name Folder</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="butCFMF_FN">
+           <property name="text">
+            <string>Create Folder and Move File</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="butCFMFDL_FN">
+           <property name="text">
+            <string> ↑+Download images</string>
+           </property>
+          </widget>
+         </item>
         </layout>
        </widget>
       </item>
