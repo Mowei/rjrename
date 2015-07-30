@@ -27,13 +27,19 @@ private slots:
     void on_butOD_clicked();
     void on_butRename_clicked();
     void on_listWidget_itemDoubleClicked(QListWidgetItem *item);
+    void on_label_customContextMenuRequested(const QPoint &pos);
 
     void showContextMenuForWidget(const QPoint &pos);
     void MenuFileOpen();
+    void MenuFolderOpen();
     void MenuShowImage();
     void MenuDLPage();
     void MenuReName();
     void MenuRJReName();
+
+    void MenuSaveImage();
+    void MenuSaveDirImage();
+
 
 private:
     Ui::MainWindow *ui;
@@ -42,6 +48,8 @@ public:
     QString currentDirectory;
     QStringList currentFileList;
     QMenu *contextMenu;
+    QMenu *contextMenuLabel;
+    QStringList dlsiteimage;
 
 };
 
