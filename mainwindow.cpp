@@ -172,7 +172,7 @@ QByteArray MainWindow::DownloadInfo(QString path)
 QStringList MainWindow::GetFormatNname(QString src)
 {
     QStringList name;
-    QRegExp rx("<span itemprop=\"title\">.*<span itemprop=\"title\">.*<span itemprop=\"title\">(.*)</span></a>.*<span itemprop=\"brand\">(.*)<\/span><\/a>.*(\\d{2})年(\\d{2})月(\\d{2})日.*<tr><th>作品形式(.*)<tr><th>ファイル形式");
+    QRegExp rx("<h1 itemprop=\"name\" id=\"work_name\">.*itemprop=\"url\">(.*)</a>.*</h1>.*data-follow-name=\"(.*)\" v-cloak>.*<th>販売日</th>.*(\\d{2})年(\\d{2})月(\\d{2})日</a></td></tr>.*<tr><th>作品形式(.*)<tr><th>ファイル形式");
     rx.setMinimal(true);
     rx.indexIn(src, 0);
 
@@ -263,7 +263,7 @@ bool MainWindow::RJReName(QString filename)
         SendMsg("File : ");
         SendMsg(oldname);
         SendMsg("ReName :");
-        QString newname="["+nameformat.at(0) + "]["+nameformat.at(1)+ nameformat.at(2)+ nameformat.at(3)+"]["+rjname+"]"+nameformat.at(4)+nameformat.at(5)+"."+ rjfile.completeSuffix();
+        QString newname="["+nameformat.at(0) + "]["+nameformat.at(1)+ nameformat.at(2)+ nameformat.at(3)+"]["+rjname+"]"+nameformat.at(4).trimmed()+nameformat.at(5)+"."+ rjfile.completeSuffix();
         newname =NameCheck(newname);
         SendMsg(newname);
         QDir myDir(currentDirectory);
