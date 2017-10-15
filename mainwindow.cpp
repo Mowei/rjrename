@@ -172,7 +172,7 @@ QByteArray MainWindow::DownloadInfo(QString path)
 QStringList MainWindow::GetFormatNname(QString src)
 {
     QStringList name;
-    QRegExp rx("<h1 itemprop=\"name\" id=\"work_name\">.*itemprop=\"url\">(.*)</a>.*</h1>.*data-follow-name=\"(.*)\" v-cloak>.*<th>販売日</th>.*(\\d{2})年(\\d{2})月(\\d{2})日</a></td></tr>.*<tr><th>作品形式(.*)<tr><th>ファイル形式");
+    QRegExp rx("<div id=\"top_wrapper\" class=\"clearfix\">.*RJ.*<span itemprop=\"name\">(.*)</span></a><meta itemprop=\"position\" content=\".*data-follow-name=\"(.*)\" v-cloak>.*<th>販売日</th>.*(\\d{2})年(\\d{2})月(\\d{2})日</a></td></tr>.*<tr><th>作品形式(.*)<tr><th>ファイル形式");
     rx.setMinimal(true);
     rx.indexIn(src, 0);
 
