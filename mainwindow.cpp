@@ -18,7 +18,13 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    currentDirectory=QDir::homePath()+"/Desktop";
+    QSettings setting("config.ini",QSettings::IniFormat);
+    setting.beginGroup("config");
+    currentDirectory=setting.value("CurrentDirectory").toString();
+    if(currentDirectory.isEmpty()){
+        currentDirectory=QDir::homePath()+"/Desktop";
+    }
+
     ui->progressBar->setValue(0);
 
     //listWidget menu
@@ -60,6 +66,9 @@ MainWindow::MainWindow(QWidget *parent) :
     contextMenuLabel->addAction(savedirimage);
     contextMenuLabel->addAction(saveformatdirimage);
 
+    //RJ tool
+    rjTool = new RJUtility();
+
     connect(saveimage, SIGNAL(triggered()), this, SLOT(MenuSaveImage()));
     connect(savedirimage, SIGNAL(triggered()), this, SLOT(MenuSaveRJDirImage()));
     connect(saveformatdirimage, SIGNAL(triggered()), this, SLOT(MenuSaveFormatDirImage()));
@@ -78,14 +87,19 @@ void MainWindow::on_butOD_clicked()
                                                          tr("Open Directory"),currentDirectory);
     SendMsg("Directory Path : "+currentDirectory);
     this->setWindowTitle(currentDirectory);
+
+    QSettings setting("config.ini",QSettings::IniFormat);
+    setting.beginGroup("config");
+    setting.setValue("CurrentDirectory",QVariant(currentDirectory));
+
     ListReload();
 }
 
 void MainWindow::on_butRename_clicked()
 {
     QMessageBox msgBox;
-    msgBox.setText("Files will be Renamed.");
-    msgBox.setInformativeText("Do you want to Rename your Files?");
+    msgBox.setText("接續動作將會對檔案重新命名!");
+    msgBox.setInformativeText("你確定要重新命名這些檔案?");
     msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No );
     msgBox.setDefaultButton(QMessageBox::No);
     int ret = msgBox.exec();
@@ -137,61 +151,6 @@ void MainWindow::SendMsg(QString msg)
     QScrollBar *sb = ui->textEdit->verticalScrollBar();
     sb->setValue(sb->maximum());
 }
-QString MainWindow::GetRJname(QString filename)
-{
-    QRegExp rx("(RJ\\d{6})");
-    rx.setMinimal(true);
-    rx.indexIn(filename.toUpper(), 0);
-    return rx.cap(1);
-}
-QString MainWindow::NameCheck(QString newname)
-{
-    newname.replace("?","？");
-    newname.replace("~","～");
-    newname.replace("*","＊");
-    newname.replace("/","／");
-    newname.replace("\\","＼");
-    newname.replace(":","：");
-    newname.replace("\"","＂");
-    newname.replace("<","＜");
-    newname.replace(">","＞");
-    newname.replace("|","｜");
-    return newname;
-}
-QByteArray MainWindow::DownloadInfo(QString path)
-{
-    QUrl url(path);
-    QNetworkAccessManager manager;
-    QEventLoop loop;
-    QNetworkReply *reply = manager.get(QNetworkRequest(url));
-    QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
-    loop.exec();
-    QByteArray data = reply->readAll();
-    return data;
-}
-QStringList MainWindow::GetFormatNname(QString src)
-{
-    QStringList name;
-    QRegExp rx("<div id=\"top_wrapper\" class=\"clearfix\">.*RJ.*<span itemprop=\"name\">(.*)</span></a><meta itemprop=\"position\" content=\".*data-follow-name=\"(.*)\" v-cloak>.*<th>販売日</th>.*(\\d{2})年(\\d{2})月(\\d{2})日</a></td></tr>.*<tr><th>作品形式(.*)<tr><th>ファイル形式");
-    rx.setMinimal(true);
-    rx.indexIn(src, 0);
-
-    if(rx.cap(1).isEmpty()||rx.cap(2).isEmpty()||rx.cap(5).isEmpty()){
-        SendMsg("<font size=6 color=\"red\">Page Not Found!</font>");
-        return name;
-    }
-
-    QRegExp type("title=\"(.*)\">");
-    type.setMinimal(true);
-    int pos = 0;
-    QString rjtype;
-    while((pos = type.indexIn(rx.cap(6), pos)) != -1) {
-        pos += type.matchedLength();
-        rjtype +="("+type.cap(1)+")";
-    }
-    name<<rx.cap(2)<<rx.cap(3)<<rx.cap(4)<<rx.cap(5)<<rx.cap(1)<<rjtype;
-    return name;
-}
 
 void MainWindow::on_listWidget_itemDoubleClicked(QListWidgetItem *item)
 {
@@ -202,60 +161,40 @@ void MainWindow::DownloadImage(QString filename)
 {
     dlsiteimage.clear();
     SendMsg("Loading Image...");
-    QString rjname= GetRJname(filename);
-    QString path ="http://www.dlsite.com/maniax/work/=/product_id/"+rjname;
-    QString src =DownloadInfo(path);
+
+    QString rjname= rjTool->GetRJname(filename);
+    QString path =rjTool->UrlBase+rjname;
     SendMsg("File : "+filename);
 
-    if(!src.isEmpty()){
-        QRegExp namerx("<span itemprop=\"title\">.*<span itemprop=\"title\">.*<span itemprop=\"title\">(.*)</span></a>.*<span itemprop=\"brand\">(.*)<\/span><\/a>.*(\\d{2})年(\\d{2})月(\\d{2})日.*<tr><th>作品形式(.*)<tr><th>ファイル形式");
-        namerx.setMinimal(true);
-        namerx.indexIn(src, 0);
+    QString src =rjTool->DownloadInfo(path);
+    dlsiteimage = rjTool->GetImageUrls(src);
 
-        QString newname="["+namerx.cap(2) + "]["+namerx.cap(3)+ namerx.cap(4)+ namerx.cap(5)+"]["+rjname+"]"+namerx.cap(1);
-        newname =NameCheck(newname);
+    if(dlsiteimage.isEmpty()){
+        SendMsg("<font size=6 color=\"red\">Not Found!</font>");
+        dlsiteimage.clear();
+    }else{
+        //SendMsg(newname);
+        SendMsg("Image link : "+dlsiteimage.at(0));
 
-
-        QRegExp rx("background-image: url\\((.*_main\.jpg)");
-        rx.setMinimal(true);
-        rx.indexIn(src, 0);
-
-        dlsiteimage<<"http:"+rx.cap(1);
-        QRegExp samplerx("sample_images.*href=\"(.*\.jpg)");
-        samplerx.setMinimal(true);
-        int pos = 0;
-        while((pos = samplerx.indexIn(src, pos)) != -1) {
-            pos += samplerx.matchedLength();
-            dlsiteimage<<"http:"+samplerx.cap(1);
-        }
-
-        if(rx.cap(1).isEmpty()){
-            SendMsg("<font size=6 color=\"red\">Not Found!</font>");
-            dlsiteimage.clear();
-        }else{
-            SendMsg(newname);
-            SendMsg("Image link : "+rx.cap(1));
-
-            QByteArray jpegData = DownloadInfo(dlsiteimage.at(0));
-            QPixmap pixmap;
-            pixmap.loadFromData(jpegData);
-            ui->label->setPixmap(pixmap);
-            ui->label_2->setText(rjname);
-            SendMsg("Image OK");
-        }
+        QByteArray jpegData = rjTool->DownloadInfo(dlsiteimage.at(0));
+        QPixmap pixmap;
+        pixmap.loadFromData(jpegData);
+        ui->label->setPixmap(pixmap);
+        ui->label_2->setText(rjname);
+        SendMsg("Image OK");
     }
+
 }
 bool MainWindow::RJReName(QString filename)
 {
-    QString rjname= GetRJname(filename);
-    QString path ="http://www.dlsite.com/maniax/work/=/product_id/"+rjname;
+    QString path = rjTool->UrlBase+rjTool->GetRJname(filename);
     SendMsg("Downloading Info..");
     SendMsg("Link : "+path);
-    QString src =DownloadInfo(path);
-
+    QString src =rjTool->DownloadInfo(path);
     if(!src.isEmpty()){
-        QStringList nameformat=GetFormatNname(src);
+        QString nameformat=rjTool->GetFormatName(src);
         if(nameformat.isEmpty()){
+            SendMsg("<font size=6 color=\"red\">Page Not Found!</font>");
             return false;
         }
         QFileInfo rjfile(currentDirectory,filename);
@@ -263,8 +202,7 @@ bool MainWindow::RJReName(QString filename)
         SendMsg("File : ");
         SendMsg(oldname);
         SendMsg("ReName :");
-        QString newname="["+nameformat.at(0) + "]["+nameformat.at(1)+ nameformat.at(2)+ nameformat.at(3)+"]["+rjname+"]"+nameformat.at(4).trimmed()+nameformat.at(5)+"."+ rjfile.completeSuffix();
-        newname =NameCheck(newname);
+        QString newname=rjTool->NameCheck(nameformat+"."+ rjfile.completeSuffix());
         SendMsg(newname);
         QDir myDir(currentDirectory);
         if(myDir.rename(oldname,newname)){
@@ -276,7 +214,7 @@ bool MainWindow::RJReName(QString filename)
     ListReload();
     return true;
 }
-bool MainWindow::MoveFile(QString dirsrc,QString dirtarget,QString filename)
+bool MainWindow::RJMoveFile(QString dirsrc,QString dirtarget,QString filename)
 {
     QFile myfile(dirsrc+"/"+filename);
     myfile.rename(dirtarget+"/"+filename);
@@ -298,7 +236,7 @@ bool MainWindow::DownloadSaveImage(QString dir,QString imagesrc)
 {
     SendMsg("Save Image...");
     QFileInfo fileInfo(imagesrc);
-    QByteArray data = DownloadInfo(imagesrc);
+    QByteArray data = rjTool->DownloadInfo(imagesrc);
     QFile file(dir+"/"+fileInfo.fileName());
     file.open(QIODevice::WriteOnly);
     SendMsg("Image :"+fileInfo.fileName());
@@ -316,7 +254,7 @@ void MainWindow::showContextMenuForWidget(const QPoint &pos)
 {
     QModelIndex t = ui->listWidget->indexAt(pos);
     if(ui->listWidget->count()>0 && t.row()!=-1){
-        ui->listWidget->item(t.row())->setSelected(true);	// even a right click will select the item
+        ui->listWidget->item(t.row())->setSelected(true);	//right click will select the item
         contextMenu->exec(mapToGlobal(pos));
     }
 
@@ -342,15 +280,15 @@ void MainWindow::MenuShowImage()
 void MainWindow::MenuDLPage()
 {
     QString filename =ui->listWidget->selectedItems().at(0)->text();
-    QString rjname= GetRJname(filename);
-    QDesktopServices::openUrl(QUrl("http://www.dlsite.com/maniax/work/=/product_id/"+rjname));
+    QString rjname= rjTool->GetRJname(filename);
+    QDesktopServices::openUrl(QUrl(rjTool->UrlBase+rjname));
     SendMsg("Show DLpage!");
 }
 void MainWindow::MenuReName()
 {
     QMessageBox msgBox;
-    msgBox.setText("File will be Renamed.");
-    msgBox.setInformativeText("Do you want to Rename your File?");
+    msgBox.setText("接續動作將會對檔案重新命名!");
+    msgBox.setInformativeText("你確定要重新命名這些檔案?");
     msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No );
     msgBox.setDefaultButton(QMessageBox::No);
     int ret = msgBox.exec();
@@ -364,8 +302,8 @@ void MainWindow::MenuReName()
 void MainWindow::MenuRJReName()
 {
     QMessageBox msgBox;
-    msgBox.setText("File will be Renamed.");
-    msgBox.setInformativeText("Do you want to Rename your File?");
+    msgBox.setText("接續動作將會對檔案重新命名!");
+    msgBox.setInformativeText("你確定要重新命名這些檔案?");
     msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No );
     msgBox.setDefaultButton(QMessageBox::No);
     int ret = msgBox.exec();
@@ -373,12 +311,12 @@ void MainWindow::MenuRJReName()
     case QMessageBox::Yes:
         QString filename =ui->listWidget->selectedItems().at(0)->text();
         QFileInfo rjfile(currentDirectory,filename);
-        QString rjname= GetRJname(filename);
+        QString rjname= rjTool->GetRJname(filename);
         SendMsg("File : ");
         SendMsg(filename);
         SendMsg("ReName :");
         QString newname=rjname+"."+ rjfile.completeSuffix();
-        newname =NameCheck(newname);
+        newname =rjTool->NameCheck(newname);
         SendMsg(newname);
         QDir myDir(currentDirectory);
         if(myDir.rename(filename,newname)){
@@ -431,14 +369,14 @@ void MainWindow::MenuSaveFormatDirImage()
 {
     if(!dlsiteimage.isEmpty()){
         QString rjname=ui->label_2->text();
-        QString path ="http://www.dlsite.com/maniax/work/=/product_id/"+rjname;
-        QString src=DownloadInfo(path);
-        QStringList nameformat =GetFormatNname(src);
+        QString path =rjTool->UrlBase+rjname;
+        QString src=rjTool->DownloadInfo(path);
+        QString nameformat =rjTool->GetFormatName(src);
         if(nameformat.isEmpty())
         {
             return;
         }
-        QString foldername="["+nameformat.at(0) + "]["+nameformat.at(1)+ nameformat.at(2)+ nameformat.at(3)+"]["+rjname+"]"+nameformat.at(4);
+        QString foldername=nameformat;
 
         if(!CreateFolder(currentDirectory, foldername))
         {
@@ -456,106 +394,27 @@ void MainWindow::MenuSaveFormatDirImage()
 
 void MainWindow::on_butCFMF_clicked()
 {
-    QMessageBox msgBox;
-    msgBox.setText("Files will be Moved.");
-    msgBox.setInformativeText("Do you want to Move your Files?");
-    msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No );
-    msgBox.setDefaultButton(QMessageBox::No);
-    int ret = msgBox.exec();
-    switch (ret) {
-    case QMessageBox::Yes:
-        QStringList filelist =currentFileList;
-        ui->progressBar->setRange(0,filelist.count());
-        int value=0;
-        if(!filelist.isEmpty()){
-            for(int i=0;i<filelist.count();i++){
-                QString filename=filelist.at(i);
-                QString foldername=GetRJname(filelist.at(i));
-                CreateFolder(currentDirectory, foldername);
-                MoveFile(currentDirectory,currentDirectory+"/"+foldername,filename);
-                value++;
-                ui->progressBar->setValue(value);
-            }
-        }
-        break;
-    }
+    ReFormatName(false,false);
 }
 
 void MainWindow::on_butCFMFDL_clicked()
 {
-    QMessageBox msgBox;
-    msgBox.setText("Files will be Moved.");
-    msgBox.setInformativeText("Do you want to Move your Files?");
-    msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No );
-    msgBox.setDefaultButton(QMessageBox::No);
-    int ret = msgBox.exec();
-    switch (ret) {
-    case QMessageBox::Yes:
-        QStringList filelist =currentFileList;
-        ui->progressBar->setRange(0,filelist.count());
-        int value=0;
-        if(!filelist.isEmpty()){
-            for(int i=0;i<filelist.count();i++){
-                QString filename=filelist.at(i);
-                QString foldername=GetRJname(filelist.at(i));
-                CreateFolder(currentDirectory, foldername);
-                MoveFile(currentDirectory,currentDirectory+"/"+foldername,filename);
-                DownloadImage(filename);
-
-                for(int i=0;i<dlsiteimage.count();i++){
-                    DownloadSaveImage(currentDirectory+"/"+foldername,dlsiteimage.at(i));
-                }
-                value++;
-                ui->progressBar->setValue(value);
-            }
-        }
-        break;
-    }
+    ReFormatName(true,false);
 }
 
 void MainWindow::on_butCFMF_FN_clicked()
 {
-    QMessageBox msgBox;
-    msgBox.setText("Files will be Moved.");
-    msgBox.setInformativeText("Do you want to Move your Files?");
-    msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No );
-    msgBox.setDefaultButton(QMessageBox::No);
-    int ret = msgBox.exec();
-    switch (ret) {
-    case QMessageBox::Yes:
-        QStringList filelist =currentFileList;
-        ui->progressBar->setRange(0,filelist.count());
-        int value=0;
-        if(!filelist.isEmpty()){
-            for(int i=0;i<filelist.count();i++){
-                QString filename=filelist.at(i);
-                QString rjname =GetRJname(filename);
-                QString path ="http://www.dlsite.com/maniax/work/=/product_id/"+rjname;
-                QString src = DownloadInfo(path);
-                QStringList nameformat = GetFormatNname(src);
-                if(nameformat.isEmpty())
-                {
-                    value++;
-                    ui->progressBar->setValue(value);
-                    continue;
-                }
-                QString foldername="["+nameformat.at(0) + "]["+nameformat.at(1)+ nameformat.at(2)+ nameformat.at(3)+"]["+rjname+"]"+nameformat.at(4);
-
-                CreateFolder(currentDirectory, foldername);
-                MoveFile(currentDirectory,currentDirectory+"/"+foldername,filename);
-                value++;
-                ui->progressBar->setValue(value);
-            }
-        }
-        break;
-    }
+    ReFormatName(false,true);
 }
 
 void MainWindow::on_butCFMFDL_FN_clicked()
 {
+    ReFormatName(true,true);
+}
+void MainWindow::ReFormatName(bool downloadImgs,bool createFormatFolder){
     QMessageBox msgBox;
-    msgBox.setText("Files will be Moved.");
-    msgBox.setInformativeText("Do you want to Move your Files?");
+    msgBox.setText("接續動作將會移動檔案!");
+    msgBox.setInformativeText("你確定要移動這些檔案?");
     msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No );
     msgBox.setDefaultButton(QMessageBox::No);
     int ret = msgBox.exec();
@@ -566,24 +425,29 @@ void MainWindow::on_butCFMFDL_FN_clicked()
         int value=0;
         if(!filelist.isEmpty()){
             for(int i=0;i<filelist.count();i++){
+                //原檔案名稱
                 QString filename=filelist.at(i);
-                QString rjname =GetRJname(filename);
-                QString path ="http://www.dlsite.com/maniax/work/=/product_id/"+rjname;
-                QString src = DownloadInfo(path);
-                QStringList nameformat = GetFormatNname(src);
-                if(nameformat.isEmpty())
-                {
-                    value++;
-                    ui->progressBar->setValue(value);
-                    continue;
+                QString rjname =rjTool->GetRJname(filename);
+                QString foldername=rjname;
+                if(createFormatFolder){
+                    QString path =rjTool->UrlBase+rjname;
+                    QString src = rjTool->DownloadInfo(path);
+                    QString nameformat = rjTool->GetFormatName(src);
+                    if(nameformat.isEmpty())
+                    {
+                        value++;
+                        ui->progressBar->setValue(value);
+                        continue;
+                    }
+                    foldername=nameformat;
                 }
-                QString foldername="["+nameformat.at(0) + "]["+nameformat.at(1)+ nameformat.at(2)+ nameformat.at(3)+"]["+rjname+"]"+nameformat.at(4);
-
                 CreateFolder(currentDirectory, foldername);
-                MoveFile(currentDirectory,currentDirectory+"/"+foldername,filename);
-                DownloadImage(filename);
-                for(int i=0;i<dlsiteimage.count();i++){
-                    DownloadSaveImage(currentDirectory+"/"+foldername,dlsiteimage.at(i));
+                RJMoveFile(currentDirectory,currentDirectory+"/"+foldername,filename);
+                if(downloadImgs){
+                    DownloadImage(filename);
+                    for(int i=0;i<dlsiteimage.count();i++){
+                        DownloadSaveImage(currentDirectory+"/"+foldername,dlsiteimage.at(i));
+                    }
                 }
                 value++;
                 ui->progressBar->setValue(value);

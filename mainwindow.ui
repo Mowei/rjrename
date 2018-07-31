@@ -99,62 +99,62 @@
       <item>
        <widget class="QPushButton" name="butOD">
         <property name="text">
-         <string>Open Dir</string>
+         <string>開啟資料夾</string>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QGroupBox" name="groupBox">
         <property name="title">
-         <string>List All</string>
+         <string>批次處理</string>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_3">
          <item>
           <widget class="QPushButton" name="butRename">
            <property name="text">
-            <string>Rename</string>
+            <string>格式化重新命名</string>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QLabel" name="label_3">
            <property name="text">
-            <string>RJ number Folder</string>
+            <string>RJ編號命名方式處理</string>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QPushButton" name="butCFMF">
            <property name="text">
-            <string>Create Folder and Move File</string>
+            <string>建立資料夾並移動檔案</string>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QPushButton" name="butCFMFDL">
            <property name="text">
-            <string> ↑+Download images</string>
+            <string> ↑+下載瀏覽圖</string>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QLabel" name="label_4">
            <property name="text">
-            <string>Format name Folder</string>
+            <string>自訂格式化命名方式處理</string>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QPushButton" name="butCFMF_FN">
            <property name="text">
-            <string>Create Folder and Move File</string>
+            <string>建立資料夾並移動檔案</string>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QPushButton" name="butCFMFDL_FN">
            <property name="text">
-            <string> ↑+Download images</string>
+            <string> ↑+下載瀏覽圖</string>
            </property>
           </widget>
          </item>

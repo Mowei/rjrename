@@ -4,6 +4,8 @@
 #include <QMainWindow>
 #include <QListWidgetItem>
 #include <QMenu>
+#include "RJUtility.h"
+
 namespace Ui {
 class MainWindow;
 }
@@ -17,15 +19,13 @@ public:
     ~MainWindow();
     void ListReload();
     void SendMsg(QString msg);
-    QString GetRJname(QString filename);
-    QString NameCheck(QString newname);
-    QByteArray DownloadInfo(QString path);
-    QStringList GetFormatNname(QString pagedata);
+
     void DownloadImage(QString filename);//get imageurl save dlsiteimage
     bool RJReName(QString filename);
-    bool MoveFile(QString dirsrc,QString dirtarget,QString filename);
+    bool RJMoveFile(QString dirsrc,QString dirtarget,QString filename);
     bool CreateFolder(QString dirpath,QString foldername);
     bool DownloadSaveImage(QString dir,QString imagesrc);
+    void ReFormatName(bool downloadImgs,bool createFormatFolder);
 
 private slots:
     void on_butOD_clicked();
@@ -60,6 +60,7 @@ public:
     QMenu *contextMenu;
     QMenu *contextMenuLabel;
     QStringList dlsiteimage;
+    RJUtility *rjTool ;
 
 };
 
