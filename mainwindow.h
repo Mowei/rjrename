@@ -4,7 +4,7 @@
 #include <QMainWindow>
 #include <QListWidgetItem>
 #include <QMenu>
-#include "RJUtility.h"
+#include "rjutility.h"
 
 namespace Ui {
 class MainWindow;

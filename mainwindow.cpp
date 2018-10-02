@@ -32,13 +32,13 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->listWidget, SIGNAL(customContextMenuRequested(const QPoint &)),
             SLOT(showContextMenuForWidget(const QPoint &)));
 
-    contextMenu= new QMenu(tr("Context menu"), this);
-    QAction *openfile =new QAction(tr("Open The File"), this);
-    QAction *openfolder =new QAction(tr("Open Folder"), this);
-    QAction *showimage =new QAction(tr("Show Image"), this);
-    QAction *dlpage =new QAction(tr("Open DLsite Link"), this);
-    QAction *renameactF =new QAction(tr("Format ReName"), this);
-    QAction *renameactR =new QAction(tr("RJNamber ReName"), this);
+    contextMenu= new QMenu(tr("功能選單"), this);
+    QAction *openfile =new QAction(tr("打開檔案"), this);
+    QAction *openfolder =new QAction(tr("打開檔案資料夾"), this);
+    QAction *showimage =new QAction(tr("預覽圖片"), this);
+    QAction *dlpage =new QAction(tr("打開DLsite連結"), this);
+    QAction *renameactF =new QAction(tr("格式化重新命名"), this);
+    QAction *renameactR =new QAction(tr("RJ編號重新命名"), this);
 
     contextMenu->addAction(openfile);
     contextMenu->addAction(openfolder);
@@ -82,10 +82,10 @@ MainWindow::~MainWindow()
 void MainWindow::on_butOD_clicked()
 {
     dlsiteimage.clear();
-    SendMsg("Open Directory...");
+    SendMsg("打開資料夾...");
     currentDirectory = QFileDialog::getExistingDirectory(this,
                                                          tr("Open Directory"),currentDirectory);
-    SendMsg("Directory Path : "+currentDirectory);
+    SendMsg("資料夾路徑 : "+currentDirectory);
     this->setWindowTitle(currentDirectory);
 
     QSettings setting("config.ini",QSettings::IniFormat);
@@ -150,12 +150,28 @@ void MainWindow::SendMsg(QString msg)
     ui->textEdit->insertPlainText("\n");
     QScrollBar *sb = ui->textEdit->verticalScrollBar();
     sb->setValue(sb->maximum());
+
+    QString dt = "LogFile";
+    dt += QDateTime::currentDateTime().toString("yyyyMMdd");
+    dt += ".log";
+    QFile outFile(dt);
+    outFile.open(QIODevice::WriteOnly | QIODevice::Append);
+    QTextStream textStream(&outFile);
+    textStream.setCodec("UTF-8");
+    textStream << msg ;
+    textStream << "\r\n";
+    outFile.close();
 }
 
 void MainWindow::on_listWidget_itemDoubleClicked(QListWidgetItem *item)
 {
     QString filename =item->text();
     DownloadImage(filename);
+
+    QString rjname= rjTool->GetRJname(filename);
+    QString path =rjTool->UrlBase+rjname;
+    ui->WebWidget->load(QUrl(path));
+    ui->WebWidget->show();
 }
 void MainWindow::DownloadImage(QString filename)
 {
@@ -219,6 +235,7 @@ bool MainWindow::RJMoveFile(QString dirsrc,QString dirtarget,QString filename)
     QFile myfile(dirsrc+"/"+filename);
     myfile.rename(dirtarget+"/"+filename);
     ListReload();
+    return true;
 }
 
 bool MainWindow::CreateFolder(QString dirpath,QString foldername){
