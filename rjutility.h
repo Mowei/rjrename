@@ -16,6 +16,7 @@ public:
     QString NameCheck(QString newname);
     QString GetRJname(QString filename);
     QString GetFormatName(QString pagedata);
+    QString GetUrlByRJNumber(QString rjNumber);
     QStringList GetImageUrls(QString pagedata);
     QByteArray DownloadInfo(QString path);
 

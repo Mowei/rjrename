@@ -104,7 +104,11 @@ QString RJUtility::GetFormatName(QString src)
 
     return name;
 }
-
+QString RJUtility::GetUrlByRJNumber(QString rjNumber)
+{
+    QString base = UrlBase;
+    return base.replace("{RJNumber}",rjNumber);
+}
 QByteArray RJUtility::DownloadInfo(QString path)
 {
     QUrl url(path);

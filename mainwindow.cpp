@@ -18,16 +18,19 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    //Get Directory Path
     QSettings setting("config.ini",QSettings::IniFormat);
     setting.beginGroup("config");
     currentDirectory=setting.value("CurrentDirectory").toString();
     if(currentDirectory.isEmpty()){
-        currentDirectory=QDir::homePath()+"/Desktop";
+        currentDirectory=QDir::homePath();
+    }else{
+        ListReload();
     }
 
     ui->progressBar->setValue(0);
 
-    //listWidget menu
+    //listWidget Menu
     ui->listWidget->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->listWidget, SIGNAL(customContextMenuRequested(const QPoint &)),
             SLOT(showContextMenuForWidget(const QPoint &)));
@@ -48,6 +51,7 @@ MainWindow::MainWindow(QWidget *parent) :
     contextMenu->addAction(renameactF);
     contextMenu->addAction(renameactR);
 
+    //Menu Event
     connect(openfile, SIGNAL(triggered()), this, SLOT(MenuFileOpen()));
     connect(openfolder, SIGNAL(triggered()), this, SLOT(MenuFolderOpen()));
     connect(showimage, SIGNAL(triggered()), this, SLOT(MenuShowImage()));
@@ -55,20 +59,21 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(renameactF, SIGNAL(triggered()), this, SLOT(MenuReName()));
     connect(renameactR, SIGNAL(triggered()), this, SLOT(MenuRJReName()));
 
-    //image menu
+    //Image Menu
     ui->label->setContextMenuPolicy(Qt::CustomContextMenu);
-    contextMenuLabel= new QMenu(tr("Context menu"), this);
-    QAction *saveimage =new QAction(tr("Save Images"), this);
-    QAction *savedirimage =new QAction(tr("Create Folder and Save Images"), this);
-    QAction *saveformatdirimage =new QAction(tr("Create Format Name Folder and Save Images"), this);
+    contextMenuLabel= new QMenu(tr("功能選單"), this);
+    QAction *saveimage =new QAction(tr("儲存圖片"), this);
+    QAction *savedirimage =new QAction(tr("建立資料夾並儲存圖片"), this);
+    QAction *saveformatdirimage =new QAction(tr("建立格式化命名資料夾並儲存圖片"), this);
 
     contextMenuLabel->addAction(saveimage);
     contextMenuLabel->addAction(savedirimage);
     contextMenuLabel->addAction(saveformatdirimage);
 
-    //RJ tool
+    //RJ Tool
     rjTool = new RJUtility();
 
+    //Save Event
     connect(saveimage, SIGNAL(triggered()), this, SLOT(MenuSaveImage()));
     connect(savedirimage, SIGNAL(triggered()), this, SLOT(MenuSaveRJDirImage()));
     connect(saveformatdirimage, SIGNAL(triggered()), this, SLOT(MenuSaveFormatDirImage()));
@@ -86,7 +91,6 @@ void MainWindow::on_butOD_clicked()
     currentDirectory = QFileDialog::getExistingDirectory(this,
                                                          tr("Open Directory"),currentDirectory);
     SendMsg("資料夾路徑 : "+currentDirectory);
-    this->setWindowTitle(currentDirectory);
 
     QSettings setting("config.ini",QSettings::IniFormat);
     setting.beginGroup("config");
@@ -123,6 +127,7 @@ void MainWindow::ListReload()
     ui->listWidget->clear();
     QStringList filters;
     filters <<"*RJ*";
+    this->setWindowTitle(currentDirectory);
     QDir myDir(currentDirectory);
     myDir.setFilter(QDir::Files | QDir::Hidden | QDir::NoSymLinks);
     myDir.setNameFilters(filters);
@@ -169,7 +174,7 @@ void MainWindow::on_listWidget_itemDoubleClicked(QListWidgetItem *item)
     DownloadImage(filename);
 
     QString rjname= rjTool->GetRJname(filename);
-    QString path =rjTool->UrlBase+rjname;
+    QString path =rjTool->GetUrlByRJNumber(rjname);
     ui->WebWidget->load(QUrl(path));
     ui->WebWidget->show();
 }
@@ -179,7 +184,7 @@ void MainWindow::DownloadImage(QString filename)
     SendMsg("Loading Image...");
 
     QString rjname= rjTool->GetRJname(filename);
-    QString path =rjTool->UrlBase+rjname;
+    QString path =rjTool->GetUrlByRJNumber(rjname);
     SendMsg("File : "+filename);
 
     QString src =rjTool->DownloadInfo(path);
@@ -203,7 +208,8 @@ void MainWindow::DownloadImage(QString filename)
 }
 bool MainWindow::RJReName(QString filename)
 {
-    QString path = rjTool->UrlBase+rjTool->GetRJname(filename);
+    QString rjname= rjTool->GetRJname(filename);
+    QString path =rjTool->GetUrlByRJNumber(rjname);
     SendMsg("Downloading Info..");
     SendMsg("Link : "+path);
     QString src =rjTool->DownloadInfo(path);
@@ -298,7 +304,8 @@ void MainWindow::MenuDLPage()
 {
     QString filename =ui->listWidget->selectedItems().at(0)->text();
     QString rjname= rjTool->GetRJname(filename);
-    QDesktopServices::openUrl(QUrl(rjTool->UrlBase+rjname));
+    QString path =rjTool->GetUrlByRJNumber(rjname);
+    QDesktopServices::openUrl(QUrl(path));
     SendMsg("Show DLpage!");
 }
 void MainWindow::MenuReName()
@@ -386,7 +393,7 @@ void MainWindow::MenuSaveFormatDirImage()
 {
     if(!dlsiteimage.isEmpty()){
         QString rjname=ui->label_2->text();
-        QString path =rjTool->UrlBase+rjname;
+        QString path =rjTool->GetUrlByRJNumber(rjname);
         QString src=rjTool->DownloadInfo(path);
         QString nameformat =rjTool->GetFormatName(src);
         if(nameformat.isEmpty())
@@ -447,7 +454,7 @@ void MainWindow::ReFormatName(bool downloadImgs,bool createFormatFolder){
                 QString rjname =rjTool->GetRJname(filename);
                 QString foldername=rjname;
                 if(createFormatFolder){
-                    QString path =rjTool->UrlBase+rjname;
+                    QString path =rjTool->GetUrlByRJNumber(rjname);
                     QString src = rjTool->DownloadInfo(path);
                     QString nameformat = rjTool->GetFormatName(src);
                     if(nameformat.isEmpty())
