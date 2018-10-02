@@ -1,10 +1,7 @@
 ﻿RJ改名工具
 =====
 程式鏈結:</br>
-https://drive.google.com/file/d/0Bx2A-Jefadp8aEg0UGxNdWZXYzg/view?usp=sharing
-</br>
-OPENSSL DLL:</br>
-https://slproweb.com/download/Win32OpenSSL_Light-1_0_2d.exe</br>
+https://drive.google.com/file/d/11DvKm7ouTm1-FTPg_tJTfZje9pIMy-IH/view?usp=sharing
 </br>
 說明
 =====
@@ -48,5 +45,5 @@ Format name=[社團][時間][RJ號]名稱(類型)
 <a href="http://imgur.com/8Mo0n0y"><img src="http://i.imgur.com/8Mo0n0y.png" title="source: imgur.com" /></a>
 展示圖片
 =====
-<a href="http://imgur.com/qmOuqwK"><img src="http://i.imgur.com/qmOuqwK.png" title="source: imgur.com" /></a>
-<a href="http://imgur.com/mWQ4bv6"><img src="http://i.imgur.com/mWQ4bv6.png" title="source: imgur.com" /></a>
+<a href="http://imgur.com/VKX2HeZ"><img src="http://i.imgur.com/VKX2HeZ.png" title="source: imgur.com" /></a>
+<a href="http://imgur.com/Q7JqYBJ"><img src="http://i.imgur.com/Q7JqYBJ.png" title="source: imgur.com" /></a>
