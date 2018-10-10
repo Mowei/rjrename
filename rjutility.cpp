@@ -1,13 +1,9 @@
 ﻿#include "rjutility.h"
 #include <QWidget>
-#include <QString>
-#include <QStringList>
 #include <QSettings>
-#include <QRegExp>
 #include <QtWebKit>
-#include <QWebView>
-#include <QWebFrame>
-#include <QDebug>
+#include <QtWebKitWidgets>
+
 RJUtility::RJUtility(QWidget *parent)
     : QWidget(parent)
 {
@@ -123,9 +119,8 @@ QByteArray RJUtility::DownloadInfo(QString path)
 
 QStringList RJUtility::GetImageUrls(QString src)
 {
+    QStringList Urls;
     if(!src.isEmpty()){
-        QStringList Urls;
-
         QWebView *webView =new QWebView();
         webView->setHtml(src);
         QWebElement document = webView->page()->mainFrame()->documentElement();
@@ -135,7 +130,6 @@ QStringList RJUtility::GetImageUrls(QString src)
         for(int i =0; i<img_body.length();i++){
             Urls<<"http:"+img_body.at(i).attribute(img_attribute);
         }
-
-        return Urls;
     }
+    return Urls;
 }

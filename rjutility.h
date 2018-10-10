@@ -2,9 +2,6 @@
 #define RJUTILITY_H
 
 #include <QWidget>
-#include <QString>
-#include <QSettings>
-#include <QWebView>
 
 class RJUtility: public QWidget
 {

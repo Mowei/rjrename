@@ -1,16 +1,15 @@
 ﻿#include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include <QDebug>
+
 #include <QFileDialog>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QScrollBar>
 #include <QFileIconProvider>
-#include <QStandardItem>
-#include <QImageReader>
 #include <QMenu>
 #include <QDesktopServices>
 #include <QMessageBox>
+#include <QSettings>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),

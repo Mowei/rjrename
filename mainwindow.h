@@ -3,7 +3,6 @@
 
 #include <QMainWindow>
 #include <QListWidgetItem>
-#include <QMenu>
 #include "rjutility.h"
 
 namespace Ui {
