@@ -1,48 +1,33 @@
 ﻿RJ改名工具
+
+config.ini 說明
 =====
-程式鏈結:</br>
-https://drive.google.com/file/d/11DvKm7ouTm1-FTPg_tJTfZje9pIMy-IH/view?usp=sharing
-</br>
-說明
-=====
-RJ number =RJXXXXXX
-</br>
-Format name=[社團][時間][RJ號]名稱(類型)
-</br>
-左鍵雙擊檔案</br>
-下方區塊會載入圖片</br>
-對檔案與下方圖片點右鍵有選單可操作
-</br>
-<a href="http://imgur.com/pCJtY5x"><img src="http://i.imgur.com/pCJtY5x.png" title="source: imgur.com" /></a>
-</br>
-檔案區塊選單依序為:</br>
-開啟檔案</br>
-開啟資料夾</br>
-在下方展示圖片</br>
-在瀏覽器打開Dsite連結</br>
-</br>
-對檔案依Format name格式改檔名</br>
-對檔案依RJ number格式改檔名</br>
-<a href="http://imgur.com/LdIS2Fz"><img src="http://i.imgur.com/LdIS2Fz.png" title="source: imgur.com" /></a>
-</br>
-</br>
-下方圖片區塊選單為:</br>
-儲存影像(含樣品圖片)</br>
-創立RJ number格式資料夾並存入影像(含樣品圖片)</br>
-創立Format name格式資料夾並存入影像(含樣品圖片)</br>
-<a href="http://imgur.com/mf5vNSJ"><img src="http://i.imgur.com/mf5vNSJ.png" title="source: imgur.com" /></a>
-</br>
-</br>
-右方功能鍵依序為:</br>
-打開目錄</br>
-對清單全部依Format name格式改檔名</br>
-</br>
-創立RJ number格式資料夾並把檔案移入</br>
-創立RJ number格式資料夾並把檔案移入並存入影像(含樣品圖片)</br>
-</br>
-創立Format name格式資料夾並把檔案移入</br>
-創立Format name格式資料夾並把檔案移入並存入影像(含樣品圖片)</br>
-<a href="http://imgur.com/8Mo0n0y"><img src="http://i.imgur.com/8Mo0n0y.png" title="source: imgur.com" /></a>
+#DLsite連結網址 {RJNumber}將會填入抓取到的RJNumber值     
+DLsiteUrlBase="http://www.dlsite.com/maniax/work/=/product_id/{RJNumber}"     
+
+#自定義重新命名檔名規則     
+FormatNameTemplate=[{maker_name}][{saleDate}][{RJNumber}]{work_name}{rjtype}     
+
+#從網頁取得RJNumber的Selector     
+#此Selector會取得網頁URL重新辨識RJNumber     
+RJNumber_URL_Selector=#work_name a     
+
+
+#從網頁取得檔案描述群組的Selector     
+#描述群組包含社團名稱,標題名稱,販售日,作品形式     
+work_outline_Selector=#work_outline     
+#從描述群組取得社團名稱的Selector     
+maker_name_Selector=.maker_name     
+#從描述群組取得標題名稱的Selector     
+work_name_Selector=#work_name     
+
+
+#從網頁取得流覽圖群組的Selector     
+img_body_Selector=.product-slider-data div     
+#從網頁取得流覽圖群組內的來源屬性     
+img_attribute=data-src     
+
+
 展示圖片
 =====
 <a href="http://imgur.com/VKX2HeZ"><img src="http://i.imgur.com/VKX2HeZ.png" title="source: imgur.com" /></a>
