@@ -1,7 +1,14 @@
-﻿RJ改名工具
-
-config.ini 說明
+RJ改名工具
 =====
+
+## 開發版本
+QT版本: Qt 5.5.1 mingw492_32     
+QT套件: webkit,webkitwidgets     
+
+## 打包
+upx > Enigma Virtual Box     
+
+## config.ini 說明
 #DLsite連結網址 {RJNumber}將會填入抓取到的RJNumber值     
 DLsiteUrlBase="http://www.dlsite.com/maniax/work/=/product_id/{RJNumber}"     
 
@@ -28,7 +35,6 @@ img_body_Selector=.product-slider-data div
 img_attribute=data-src     
 
 
-展示圖片
-=====
+## 展示圖片
 <a href="http://imgur.com/VKX2HeZ"><img src="http://i.imgur.com/VKX2HeZ.png" title="source: imgur.com" /></a>
 <a href="http://imgur.com/Q7JqYBJ"><img src="http://i.imgur.com/Q7JqYBJ.png" title="source: imgur.com" /></a>
